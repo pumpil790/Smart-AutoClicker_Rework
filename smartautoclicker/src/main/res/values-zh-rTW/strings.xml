@@ -50,7 +50,6 @@
     <string name="item_desc_dumb_scenario_repeat_count">重複 %1$d 次</string>
     <string name="item_desc_dumb_scenario_repeat_infinite">無限重複</string>
     <string name="item_desc_smart_scenario">運用影像辨識建立複雜使用情境。</string>
-    <string name="item_desc_smart_scenario_pro_mode">須觀看廣告或購買專業版</string>
     <string name="item_title_dumb_scenario">簡易</string>
     <string name="item_title_smart_scenario">智慧</string>
 
@@ -87,8 +86,6 @@
     <string name="field_input_block_workaround_title">解除觸控阻塞</string>
     <string name="field_input_block_workaround_desc">於部分搭載 Android 15 的 Pixel 裝置上，使用自動點擊器可能導致觸控暫時無回應。\n可同時以多指觸碰螢幕以恢復。本設定將嘗試每 10 秒模擬該操作。</string>
 
-    <string name="field_privacy">隱私權設定</string>
-    <string name="field_remove_ads">移除廣告</string>
     <string name="field_troubleshooting">疑難排解</string>
 
     <string name="dialog_condition_migration_title">移轉</string>

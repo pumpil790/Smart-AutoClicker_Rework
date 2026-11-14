@@ -17,7 +17,6 @@
 package com.buzbuz.smartautoclicker.scenarios.viewmodel
 
 import android.Manifest
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -26,7 +25,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.PermissionChecker
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 
 import com.buzbuz.smartautoclicker.core.base.data.AppComponentsProvider
 import com.buzbuz.smartautoclicker.core.common.accessibility.domain.LocalAccessibilityServiceConnection
@@ -37,20 +35,14 @@ import com.buzbuz.smartautoclicker.core.common.permissions.PermissionsController
 import com.buzbuz.smartautoclicker.core.common.permissions.model.PermissionAccessibilityService
 import com.buzbuz.smartautoclicker.core.common.permissions.model.PermissionOverlay
 import com.buzbuz.smartautoclicker.core.common.permissions.model.PermissionPostNotification
-import com.buzbuz.smartautoclicker.core.common.revenue.domain.IRevenueRepository
-import com.buzbuz.smartautoclicker.core.common.revenue.domain.model.UserConsentState
 import com.buzbuz.smartautoclicker.core.settings.domain.SettingsRepository
 
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 /** AndroidViewModel for create/delete/list click scenarios from an LifecycleOwner. */
 @HiltViewModel
 class ScenarioViewModel @Inject constructor(
-    private val revenueRepository: IRevenueRepository,
     private val qualityRepository: QualityRepository,
     private val permissionController: PermissionsController,
     private val settingsRepository: SettingsRepository,
@@ -58,20 +50,8 @@ class ScenarioViewModel @Inject constructor(
     private val serviceConnection: LocalAccessibilityServiceConnection,
 ) : ViewModel() {
 
-    val userConsentState: StateFlow<UserConsentState> = revenueRepository.userConsentState
-        .stateIn(viewModelScope, SharingStarted.Eagerly, UserConsentState.UNKNOWN)
-
     fun isEntireScreenCaptureForced(): Boolean =
         settingsRepository.isEntireScreenCaptureForced()
-
-    fun requestUserConsentIfNeeded(activity: Activity) {
-        revenueRepository.refreshPurchases()
-        revenueRepository.startUserConsentRequestUiFlowIfNeeded(activity)
-    }
-
-    fun refreshPurchaseState() {
-        revenueRepository.refreshPurchases()
-    }
 
     fun startPermissionFlowIfNeeded(activity: AppCompatActivity, onAllGranted: () -> Unit) {
         permissionController.startPermissionsUiFlow(

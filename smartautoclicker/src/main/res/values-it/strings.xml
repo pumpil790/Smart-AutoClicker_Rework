@@ -73,7 +73,6 @@
     <string name="item_desc_dumb_scenario_repeat_count">Ripetere %1$d volte</string>
     <string name="item_desc_dumb_scenario_repeat_infinite">Ripetizione infinita</string>
     <string name="item_desc_smart_scenario">Utilizzate il rilevamento delle immagini per creare casi d\'uso complessi.</string>
-    <string name="item_desc_smart_scenario_pro_mode">Richiede la visione di un annuncio o l\'acquisto della modalità pro</string>
     <string name="item_title_dumb_scenario">Semplice</string>
     <string name="item_title_smart_scenario">Intelligente</string>
 
@@ -139,8 +138,6 @@
     <string name="field_input_block_workaround_desc">Sui dispositivi Pixel con Android 15, l\'uso di un cliccatore automatico può bloccare il touch screen.\nPer sbloccarlo, è necessario toccare lo schermo con più dita contemporaneamente. Questa impostazione cerca di simulare questa operazione ogni 10 secondi.</string>
 
 
-    <string name="field_privacy">Impostazioni sulla privacy</string>
-    <string name="field_remove_ads">Rimuovere gli annunci</string>
     <string name="field_troubleshooting">Risoluzione dei problemi</string>
 
 

@@ -17,7 +17,6 @@
 package com.buzbuz.smartautoclicker.settings
 
 import com.buzbuz.smartautoclicker.core.common.quality.domain.QualityRepository
-import com.buzbuz.smartautoclicker.core.common.revenue.domain.IRevenueRepository
 import com.buzbuz.smartautoclicker.core.settings.domain.SettingsRepository
 
 import io.mockk.every
@@ -38,7 +37,6 @@ class SettingsViewModelTest {
     private val showOnLockScreenFlow = MutableStateFlow(false)
 
     private val mockQualityRepository: QualityRepository = mockk(relaxed = true)
-    private val mockRevenueRepository: IRevenueRepository = mockk(relaxed = true)
     private val mockSettingsRepository: SettingsRepository = mockk(relaxed = true)
 
     private lateinit var viewModel: SettingsViewModel
@@ -48,7 +46,6 @@ class SettingsViewModelTest {
         every { mockSettingsRepository.showOnLockScreenFlow } returns showOnLockScreenFlow
         viewModel = SettingsViewModel(
             qualityRepository = mockQualityRepository,
-            revenueRepository = mockRevenueRepository,
             settingsRepository = mockSettingsRepository,
         )
     }

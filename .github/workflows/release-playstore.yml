@@ -40,9 +40,6 @@ jobs:
     - name: Build with Gradle
       run: |
         ./gradlew \
-          -PadsApplicationId="${{ secrets.ADS_APPLICATION_ID }}" \
-          -PadsUnitId="${{ secrets.ADS_UNIT_ID }}" \
-          -PbillingPublicKey="${{ secrets.BILLING_PUBLIC_KEY }}" \
           -PsigningStorePassword="${{ secrets.SIGNING_STORE_PASSWORD }}" \
           -PsigningKeyAlias="${{ secrets.SIGNING_KEY_ALIAS }}" \
           -PsigningKeyPassword="${{ secrets.SIGNING_KEY_PASSWORD }}" \

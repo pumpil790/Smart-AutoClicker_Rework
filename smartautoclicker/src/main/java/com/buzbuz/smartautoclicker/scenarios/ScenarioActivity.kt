@@ -18,7 +18,6 @@ package com.buzbuz.smartautoclicker.scenarios
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -27,8 +26,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.buzbuz.smartautoclicker.R
 import com.buzbuz.smartautoclicker.scenarios.list.ScenarioListFragment
 import com.buzbuz.smartautoclicker.scenarios.list.model.ScenarioListUiState
-import com.buzbuz.smartautoclicker.core.base.extensions.delayDrawUntil
-import com.buzbuz.smartautoclicker.core.common.revenue.domain.model.UserConsentState
 import com.buzbuz.smartautoclicker.core.display.recorder.MediaProjectionRequest
 import com.buzbuz.smartautoclicker.core.domain.model.scenario.Scenario
 import com.buzbuz.smartautoclicker.core.dumb.domain.model.DumbScenario
@@ -60,19 +57,8 @@ class ScenarioActivity : AppCompatActivity(), ScenarioListFragment.Listener {
         setContentView(R.layout.activity_scenario)
 
         scenarioViewModel.stopScenario()
-        scenarioViewModel.requestUserConsentIfNeeded(this)
 
         mediaProjectionRequest.registerForActivityResult(this)
-
-        // Splash screen is dismissed on first frame drawn, delay it until we have a user consent status
-        findViewById<View>(android.R.id.content).delayDrawUntil {
-            scenarioViewModel.userConsentState.value != UserConsentState.UNKNOWN
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        scenarioViewModel.refreshPurchaseState()
     }
 
     override fun startScenario(item: ScenarioListUiState.Item.ScenarioItem) {

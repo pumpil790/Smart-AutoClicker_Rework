@@ -36,9 +36,7 @@ import com.buzbuz.smartautoclicker.core.common.overlays.manager.OverlayManager
 import com.buzbuz.smartautoclicker.core.common.quality.domain.QualityMetricsMonitor
 import com.buzbuz.smartautoclicker.core.common.quality.domain.QualityRepository
 import com.buzbuz.smartautoclicker.core.common.navigation.getReviewNavigator
-import com.buzbuz.smartautoclicker.core.common.revenue.domain.IRevenueRepository
 import com.buzbuz.smartautoclicker.core.common.review.ReviewRepository
-import com.buzbuz.smartautoclicker.core.common.tutorial.domain.TutorialRepository
 import com.buzbuz.smartautoclicker.core.display.config.DisplayConfigManager
 import com.buzbuz.smartautoclicker.core.domain.model.scenario.Scenario
 import com.buzbuz.smartautoclicker.core.dumb.domain.model.DumbScenario
@@ -82,13 +80,11 @@ class SmartAutoClickerService : AccessibilityService() {
     @Inject lateinit var qualityRepository: QualityRepository
     @Inject lateinit var qualityMetricsMonitor: QualityMetricsMonitor
     @Inject lateinit var settingsRepository: SettingsRepository
-    @Inject lateinit var revenueRepository: IRevenueRepository
     @Inject lateinit var tileRepository: QSTileRepository
     @Inject lateinit var reviewRepository: ReviewRepository
     @Inject lateinit var appComponentsProvider: AppComponentsProvider
     @Inject lateinit var actionExecutor: AndroidActionExecutor
     @Inject lateinit var debuggingRepository: DebuggingRepository
-    @Inject lateinit var tutorialRepository: TutorialRepository
     @Inject lateinit var activityLifecycleTracker: ActivityLifecycleTracker
 
     override fun onServiceConnected() {
@@ -119,10 +115,8 @@ class SmartAutoClickerService : AccessibilityService() {
                 appComponentsProvider = appComponentsProvider,
                 smartProcessingRepository = smartProcessingRepository,
                 dumbEngine = dumbEngine,
-                revenueRepository = revenueRepository,
                 settingsRepository = settingsRepository,
                 debuggingRepository = debuggingRepository,
-                tutorialRepository = tutorialRepository,
                 onStart = ::onLocalServiceStarted,
                 onStop = ::onLocalServiceStopped,
             )
@@ -213,7 +207,6 @@ class SmartAutoClickerService : AccessibilityService() {
         actionExecutor.dump(writer)
         qualityRepository.dump(writer)
 
-        revenueRepository.dump(writer)
         reviewRepository.dump(writer)
     }
 

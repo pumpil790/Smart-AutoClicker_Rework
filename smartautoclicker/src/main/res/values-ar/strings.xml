@@ -79,7 +79,6 @@
     <string name="item_desc_dumb_scenario_repeat_count">كرر %1$d مرات</string>
     <string name="item_desc_dumb_scenario_repeat_infinite">تكرار غير محدود</string>
     <string name="item_desc_smart_scenario">استخدم اكتشاف الصور لإنشاء سيناريوهات معقدة.</string>
-    <string name="item_desc_smart_scenario_pro_mode">يتطلب مشاهدة إعلان أو شراء وضع Pro</string>
     <string name="item_title_dumb_scenario">بسيط</string>
     <string name="item_title_smart_scenario">ذكي</string>
 
@@ -147,8 +146,6 @@
     <string name="field_input_block_workaround_title">إلغاء حظر الشاشة باللمس</string>
     <string name="field_input_block_workaround_desc">في أجهزة Pixel مع Android 15، استخدام النقر التلقائي يمكن أن يحجب الشاشة باللمس.\nلفك الحظر، تحتاج إلى لمس الشاشة بعدة أصابع في نفس الوقت. تحاول هذه الإعدادات محاكاة ذلك كل 10 ثوانٍ.</string>
 
-    <string name="field_privacy">إعدادات الخصوصية</string>
-    <string name="field_remove_ads">إزالة الإعلانات</string>
     <string name="field_troubleshooting">استكشاف الأخطاء وإصلاحها</string>
 
 

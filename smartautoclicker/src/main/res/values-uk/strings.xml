@@ -74,7 +74,6 @@
     <string name="item_desc_dumb_scenario_repeat_count">Повторити %1$d разів</string>
     <string name="item_desc_dumb_scenario_repeat_infinite">Нескінченне повторення</string>
     <string name="item_desc_smart_scenario">Використовуйте виявлення зображень для створення складних випадків використання.</string>
-    <string name="item_desc_smart_scenario_pro_mode">Потрібно переглянути рекламу або купити про-режим</string>
     <string name="item_title_dumb_scenario">Простий</string>
     <string name="item_title_smart_scenario">Розумний</string>
 
@@ -140,8 +139,6 @@
     <string name="field_input_block_workaround_title">Розблокувати сенсорний екран</string>
     <string name="field_input_block_workaround_desc">На пристроях Pixel з Android 15 використання автоклікера може заблокувати сенсорний екран.\nЩоб розблокувати його, потрібно доторкнутися до екрана кількома пальцями одночасно. Це налаштування намагається імітувати це кожні 10 секунд.</string>
 
-    <string name="field_privacy">Налаштування приватності</string>
-    <string name="field_remove_ads">Видалити рекламу</string>
     <string name="field_troubleshooting">Усунення несправностей</string>
 
 

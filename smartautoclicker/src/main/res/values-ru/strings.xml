@@ -75,7 +75,6 @@
     <string name="item_desc_dumb_scenario_repeat_count">Повторить %1$d раз</string>
     <string name="item_desc_dumb_scenario_repeat_infinite">Повторять бесконечно</string>
     <string name="item_desc_smart_scenario">Используется обнаружение изображений для создания сложных ситуаций.\nНекоторые функции платные.</string>
-    <string name="item_desc_smart_scenario_pro_mode">Используется обнаружение изображений для создания сложных ситуаций.</string>
     <string name="item_title_dumb_scenario">Простой</string>
     <string name="item_title_smart_scenario">Умный</string>
 
@@ -137,8 +136,6 @@
     <string name="field_input_block_workaround_title">Разблокировать сенсорный экран</string>
     <string name="field_input_block_workaround_desc">На устройствах Pixel с Android 15 использование автоматического кликера может заблокировать сенсорный экран.\nЧтобы разблокировать его, необходимо одновременно коснуться экрана несколькими пальцами. Этот параметр пытается имитировать это каждые 10 секунд.</string>
 
-    <string name="field_privacy">Настройки конфиденциальности</string>
-    <string name="field_remove_ads">Удалить рекламу</string>
     <string name="field_troubleshooting">Поиск неисправностей</string>
 
 

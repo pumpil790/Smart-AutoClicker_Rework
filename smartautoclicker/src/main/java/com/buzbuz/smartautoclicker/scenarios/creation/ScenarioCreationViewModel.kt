@@ -24,8 +24,6 @@ import androidx.lifecycle.viewModelScope
 import com.buzbuz.smartautoclicker.R
 import com.buzbuz.smartautoclicker.core.base.identifier.DATABASE_ID_INSERTION
 import com.buzbuz.smartautoclicker.core.base.identifier.Identifier
-import com.buzbuz.smartautoclicker.core.common.revenue.domain.IRevenueRepository
-import com.buzbuz.smartautoclicker.core.common.revenue.domain.model.UserBillingState
 import com.buzbuz.smartautoclicker.core.display.config.DisplayConfigManager
 import com.buzbuz.smartautoclicker.core.domain.IRepository
 import com.buzbuz.smartautoclicker.core.domain.model.scenario.Scenario
@@ -50,7 +48,6 @@ import kotlin.math.max
 @HiltViewModel
 class ScenarioCreationViewModel @Inject constructor(
     @ApplicationContext context: Context,
-    revenueRepository: IRevenueRepository,
     private val smartRepository: IRepository,
     private val dumbRepository: IDumbRepository,
     private val displayConfigManager: DisplayConfigManager,
@@ -63,13 +60,11 @@ class ScenarioCreationViewModel @Inject constructor(
         .take(1)
     val nameError: Flow<Boolean> = _name
         .map { it.isNullOrEmpty() }
-    val showPaidLimitationWarning: Flow<Boolean> = revenueRepository.userBillingState
-        .map { it != UserBillingState.PURCHASED }
 
     private val _selectedType: MutableStateFlow<ScenarioTypeSelection> =
         MutableStateFlow(ScenarioTypeSelection.SMART)
     val scenarioTypeSelectionState: Flow<ScenarioTypeSelectionState> =
-        combine(_selectedType, revenueRepository.userBillingState) { selectedType, billingState ->
+        _selectedType.map { selectedType ->
             ScenarioTypeSelectionState(
                 dumbItem = ScenarioTypeItem.Dumb,
                 smartItem = ScenarioTypeItem.Smart,

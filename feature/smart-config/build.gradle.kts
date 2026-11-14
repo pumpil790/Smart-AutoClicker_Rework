@@ -45,7 +45,6 @@ dependencies {
     implementation(project(":core:common:navigation"))
     implementation(project(":core:common:overlays"))
     implementation(project(":core:common:permissions"))
-    implementation(project(":core:common:revenue"))
     implementation(project(":core:common:settings"))
     implementation(project(":core:common:tutorial"))
     implementation(project(":core:common:ui"))

@@ -50,7 +50,6 @@
     <string name="item_desc_dumb_scenario_repeat_count">%1$d 回繰り返す</string>
     <string name="item_desc_dumb_scenario_repeat_infinite">無限に繰り返す</string>
     <string name="item_desc_smart_scenario">画像検出により、複雑な用途を作成できます。</string>
-    <string name="item_desc_smart_scenario_pro_mode">広告の視聴またはプロ版の購入が必要です</string>
     <string name="item_title_dumb_scenario">シンプル</string>
     <string name="item_title_smart_scenario">スマート</string>
 
@@ -87,8 +86,6 @@
     <string name="field_input_block_workaround_title">タッチ画面のブロック解除</string>
     <string name="field_input_block_workaround_desc">Android 15 を搭載した一部の Pixel 端末では、自動タップの使用によりタッチが反応しなくなることがあります。\n複数指で画面に触れると回復します。本設定は 10 秒ごとにその操作を試みます。</string>
 
-    <string name="field_privacy">プライバシー設定</string>
-    <string name="field_remove_ads">広告を削除</string>
     <string name="field_troubleshooting">トラブルシューティング</string>
 
     <string name="dialog_condition_migration_title">移行</string>

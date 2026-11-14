@@ -25,7 +25,6 @@ import dagger.hilt.components.SingletonComponent
 interface NavigationEntryPoint {
 
     fun debuggingNavigator(): DebuggingNavigator
-    fun revenueNavigator(): RevenueNavigator
     fun reviewNavigator(): ReviewNavigator
     fun tutorialNavigator(): TutorialNavigator
 }

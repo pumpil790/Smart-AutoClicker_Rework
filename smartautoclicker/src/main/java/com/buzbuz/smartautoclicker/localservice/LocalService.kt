@@ -25,10 +25,6 @@ import android.view.KeyEvent
 import com.buzbuz.smartautoclicker.core.base.data.AppComponentsProvider
 import com.buzbuz.smartautoclicker.core.common.accessibility.domain.LocalAccessibilityService
 import com.buzbuz.smartautoclicker.core.common.overlays.manager.OverlayManager
-import com.buzbuz.smartautoclicker.core.common.navigation.getRevenueNavigator
-import com.buzbuz.smartautoclicker.core.common.revenue.domain.IRevenueRepository
-import com.buzbuz.smartautoclicker.core.common.revenue.domain.model.UserBillingState
-import com.buzbuz.smartautoclicker.core.common.tutorial.domain.TutorialRepository
 import com.buzbuz.smartautoclicker.core.domain.model.scenario.Scenario
 import com.buzbuz.smartautoclicker.core.dumb.domain.model.DumbScenario
 import com.buzbuz.smartautoclicker.core.dumb.engine.DumbEngine
@@ -50,7 +46,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -61,8 +56,6 @@ class LocalService(
     private val settingsRepository: SettingsRepository,
     private val smartProcessingRepository: SmartProcessingRepository,
     private val dumbEngine: DumbEngine,
-    private val tutorialRepository: TutorialRepository,
-    private val revenueRepository: IRevenueRepository,
     private val debuggingRepository: DebuggingRepository,
     private val onStart: (scenarioId: Long, isSmart: Boolean, foregroundNotification: Notification?) -> Unit,
     private val onStop: () -> Unit,
@@ -72,8 +65,6 @@ class LocalService(
     private val serviceScope: CoroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     /** Coroutine job for the delayed start of engine & ui. */
     private var startJob: Job? = null
-    /** Coroutine job for the paywall result upon start from notification. */
-    private var paywallResultJob: Job? = null
 
     /** Controls the notifications for the foreground service. */
     private val notificationController: ServiceNotificationController by lazy {
@@ -210,8 +201,7 @@ class LocalService(
     private fun play() {
         serviceScope.launch {
             if (state.isSmartLoaded && !smartProcessingRepository.isRunning()) {
-                if (shouldStartPaywall()) startPaywall()
-                else startSmartScenario()
+                startSmartScenario()
             } else if (!state.isSmartLoaded && !dumbEngine.isRunning.value) {
                 dumbEngine.startDumbScenario()
             }
@@ -227,27 +217,10 @@ class LocalService(
         }
     }
 
-    private fun shouldStartPaywall(): Boolean =
-        revenueRepository.userBillingState.value == UserBillingState.AD_REQUESTED &&
-                !tutorialRepository.isTutorialStarted()
-
-    private fun startPaywall() {
-        context.getRevenueNavigator().startPaywallActivity(context)
-
-        paywallResultJob = revenueRepository.paywallFinished
-            .take(1)
-            .onEach {
-                if (revenueRepository.userBillingState.value != UserBillingState.AD_REQUESTED) startSmartScenario()
-                paywallResultJob = null
-            }
-            .launchIn(serviceScope)
-    }
-
     private fun startSmartScenario() {
         serviceScope.launch {
             smartProcessingRepository.startDetection(
                 context = context,
-                autoStopDuration = revenueRepository.consumeTrial(),
                 liveDebugging = debuggingRepository.isDebugViewEnabled(),
                 generateReport = debuggingRepository.isDebugReportEnabled(),
             )

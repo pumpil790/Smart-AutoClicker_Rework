@@ -16,27 +16,21 @@
  */
 package com.buzbuz.smartautoclicker.settings
 
-import android.app.Activity
-import android.content.Context
 import android.os.Build
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import com.buzbuz.smartautoclicker.core.base.workarounds.isImpactedByInputBlock
 import com.buzbuz.smartautoclicker.core.common.quality.domain.QualityRepository
-import com.buzbuz.smartautoclicker.core.common.revenue.domain.IRevenueRepository
-import com.buzbuz.smartautoclicker.core.common.revenue.domain.model.UserBillingState
 import com.buzbuz.smartautoclicker.core.settings.domain.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val qualityRepository: QualityRepository,
-    private val revenueRepository: IRevenueRepository,
     private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
@@ -60,14 +54,6 @@ class SettingsViewModel @Inject constructor(
 
     val shouldShowEntireScreenCapture: Flow<Boolean> =
         flowOf(Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM)
-
-    val shouldShowPrivacySettings: Flow<Boolean> =
-        revenueRepository.isPrivacySettingRequired
-
-    val shouldShowPurchase: Flow<Boolean> =
-        revenueRepository.userBillingState.map { billingState ->
-            billingState != UserBillingState.PURCHASED
-        }
 
     val shouldShowInputBlockWorkaround: Flow<Boolean> =
         flowOf(isImpactedByInputBlock())
@@ -95,10 +81,6 @@ class SettingsViewModel @Inject constructor(
 
     fun toggleInputBlockWorkaround() {
         settingsRepository.toggleInputBlockWorkaround()
-    }
-
-    fun showPrivacySettings(activity: Activity) {
-        revenueRepository.startPrivacySettingUiFlow(activity)
     }
 
     fun showTroubleshootingDialog(activity: FragmentActivity) {

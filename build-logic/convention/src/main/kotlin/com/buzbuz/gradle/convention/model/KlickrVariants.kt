@@ -31,6 +31,6 @@ enum class KlickrDimension(val flavourDimensionName: String) {
 enum class KlickrFlavour(val flavourName: String, val dimension: KlickrDimension) {
     /** Gradle flavour for FOSS fDroid Klick'r. */
     F_DROID("fDroid", KlickrDimension.VERSION),
-    /** Gradle flavour for PlayStore Klick'r (with in app purchase, ads and crashlytics). */
+    /** Gradle flavour for PlayStore Klick'r (with crashlytics). */
     PLAY_STORE("playStore", KlickrDimension.VERSION);
 }

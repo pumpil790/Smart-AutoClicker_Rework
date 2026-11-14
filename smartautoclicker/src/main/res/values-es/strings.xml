@@ -72,7 +72,6 @@
     <string name="item_desc_dumb_scenario_repeat_count">Repetir %1$d veces</string>
     <string name="item_desc_dumb_scenario_repeat_infinite">repetición infinita</string>
     <string name="item_desc_smart_scenario">Utilice la detección de imágenes para crear casos de uso complejos.</string>
-    <string name="item_desc_smart_scenario_pro_mode">Requiere ver un anuncio o comprar el modo profesional</string>
     <string name="item_title_dumb_scenario">Simple</string>
     <string name="item_title_smart_scenario">Elegante</string>
 
@@ -140,8 +139,6 @@
     <string name="field_input_block_workaround_title">Desbloquear pantalla táctil</string>
     <string name="field_input_block_workaround_desc">En dispositivos Pixel con Android 15, el uso de un control automático puede bloquear la pantalla táctil.\nPara desbloquearla, debes tocar la pantalla con varios dedos al mismo tiempo. Esta configuración intenta simular esto cada 10 segundos.</string>
 
-    <string name="field_privacy">Configuración de privacidad</string>
-    <string name="field_remove_ads">Quitar anuncios</string>
     <string name="field_troubleshooting">Solución de problemas</string>
 
 

@@ -73,7 +73,6 @@ class ScenarioCreationDialog : DialogFragment() {
                 launch { viewModel.nameError.collect(viewBinding.scenarioNameInputLayout::setError) }
                 launch { viewModel.scenarioTypeSelectionState.collect(::updateTypeSelection) }
                 launch { viewModel.creationState.collect(::updateCreationState) }
-                launch { viewModel.showPaidLimitationWarning.collect(::updatePaidLimitationWarning) }
             }
         }
     }
@@ -137,7 +136,6 @@ class ScenarioCreationDialog : DialogFragment() {
                 titleScenarioType.setText(R.string.item_title_smart_scenario)
                 titleScenarioType.setLeftCompoundDrawable(R.drawable.ic_smart)
                 titleScenarioTypeDesc.setText(R.string.item_desc_smart_scenario)
-                titleScenarioTypeAdWarning.setText(R.string.item_desc_smart_scenario_pro_mode)
             }
         }
 
@@ -153,11 +151,6 @@ class ScenarioCreationDialog : DialogFragment() {
             scenarioTypeDumb.setState(state.selectedItem, ScenarioTypeSelection.DUMB)
             scenarioTypeSmart.setState(state.selectedItem, ScenarioTypeSelection.SMART)
         }
-    }
-
-    private fun updatePaidLimitationWarning(enabled: Boolean) {
-        viewBinding.scenarioTypeSmart.titleScenarioTypeAdWarning.visibility =
-            if (enabled) View.VISIBLE else View.GONE
     }
 
     private fun IncludeScenarioTypeViewBinding.setState(

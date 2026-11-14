@@ -28,12 +28,13 @@ jobs:
           echo "ANDROID_NDK_ROOT=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV
 
       - name: Build Debug APK with Gradle
-        run: ./gradlew assembleFDroidDebug
+        run: ./gradlew -PabiFilters=arm64-v8a assembleFDroidDebug
         env:
           JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: smartautoclicker-fDroid-debug-apk
-          path: smartautoclicker/build/outputs/apk/fDroid/debug/*.apk
+          name: smartautoclicker-arm64-v8a-debug-apk
+          path: smartautoclicker/build/outputs/apk/fDroid/debug/*arm64-v8a*.apk
+

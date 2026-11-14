@@ -22,7 +22,10 @@ import com.buzbuz.smartautoclicker.core.domain.model.OR
 import com.buzbuz.smartautoclicker.core.domain.model.action.Action
 import com.buzbuz.smartautoclicker.core.domain.model.action.ChangeCounter
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
+import com.buzbuz.smartautoclicker.core.domain.model.action.Gesture
 import com.buzbuz.smartautoclicker.core.domain.model.action.ToggleEvent
+import com.buzbuz.smartautoclicker.core.domain.model.action.gesture.GestureFingerMotion
+import com.buzbuz.smartautoclicker.core.domain.model.action.position.Position
 import com.buzbuz.smartautoclicker.core.domain.model.action.toggleevent.EventToggle
 import com.buzbuz.smartautoclicker.core.domain.model.action.intent.IntentExtra
 import com.buzbuz.smartautoclicker.core.domain.model.condition.Condition
@@ -257,6 +260,16 @@ internal class EditionState internal constructor(
         return actions.any { action ->
             when (action) {
                 is Click -> event.conditionOperator != OR && action.getClickOnConditionId() == condition.id
+                is Gesture -> event.conditionOperator != OR && action.fingers.any { finger ->
+                    finger.motions.any { motion ->
+                        val pos = when (motion) {
+                            is GestureFingerMotion.Press -> motion.position
+                            is GestureFingerMotion.Move -> motion.position
+                            else -> null
+                        }
+                        pos is Position.Condition && pos.conditionId == condition.id
+                    }
+                }
                 is ChangeCounter -> {
                     val value = action.operationValue
                     value is CounterOperationValue.Condition && value.conditionId == condition.id

@@ -55,7 +55,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = getExtraActualApplicationId()
+        applicationId = "${getExtraActualApplicationId()}.rework"
 
         versionCode = 104
         versionName = "4.1.2"

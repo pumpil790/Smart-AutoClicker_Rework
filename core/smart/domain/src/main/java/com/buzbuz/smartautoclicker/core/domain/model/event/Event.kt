@@ -27,6 +27,7 @@ import com.buzbuz.smartautoclicker.core.domain.model.action.Action
 import com.buzbuz.smartautoclicker.core.domain.model.condition.ScreenCondition
 import com.buzbuz.smartautoclicker.core.domain.model.ConditionOperator
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
+import com.buzbuz.smartautoclicker.core.domain.model.action.Gesture
 import com.buzbuz.smartautoclicker.core.domain.model.action.position.Position
 import com.buzbuz.smartautoclicker.core.domain.model.condition.Condition
 import com.buzbuz.smartautoclicker.core.domain.model.condition.TriggerCondition
@@ -93,6 +94,7 @@ data class ScreenEvent(
 
         actions.forEach { action ->
             if (conditionOperator == AND && action is Click && !action.isClickOnConditionValid()) return false
+            if (conditionOperator == AND && action is Gesture && !action.isConditionPositionsValid()) return false
         }
 
         return true
@@ -125,6 +127,7 @@ data class TriggerEvent(
 
         return when (this) {
             is Click -> position is Position.Coordinates
+            is Gesture -> !hasConditionPositions()
 
             else -> true
         }

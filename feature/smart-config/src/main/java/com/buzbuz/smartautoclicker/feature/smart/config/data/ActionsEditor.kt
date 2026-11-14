@@ -19,6 +19,7 @@ package com.buzbuz.smartautoclicker.feature.smart.config.data
 import com.buzbuz.smartautoclicker.core.domain.model.AND
 import com.buzbuz.smartautoclicker.core.domain.model.action.Action
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
+import com.buzbuz.smartautoclicker.core.domain.model.action.Gesture
 import com.buzbuz.smartautoclicker.core.domain.model.action.position.Position
 import com.buzbuz.smartautoclicker.core.domain.model.action.Intent
 import com.buzbuz.smartautoclicker.core.domain.model.action.ToggleEvent
@@ -63,19 +64,29 @@ internal class ActionsEditor<Parent>(
         super.stopItemEdition()
     }
 
-    override fun itemCanBeSaved(item: Action?, parent: Parent?): Boolean =
-        if (item is Click) {
-            when (parent) {
-                is TriggerEvent ->
-                    item.isComplete() && item.position !is Position.Condition
+    override fun itemCanBeSaved(item: Action?, parent: Parent?): Boolean = when (item) {
+        is Click -> when (parent) {
+            is TriggerEvent ->
+                item.isComplete() && item.position !is Position.Condition
 
-                is ScreenEvent ->
-                    if (item.isComplete()) !(parent.conditionOperator == AND && !item.isClickOnConditionValid())
-                    else false
+            is ScreenEvent ->
+                item.isComplete() && !(parent.conditionOperator == AND && !item.isClickOnConditionValid())
 
-                else -> item.isComplete()
-            }
-        } else item?.isComplete() ?: false
+            else -> item.isComplete()
+        }
+
+        is Gesture -> when (parent) {
+            is TriggerEvent ->
+                item.isComplete() && !item.hasConditionPositions()
+
+            is ScreenEvent ->
+                item.isComplete() && !(parent.conditionOperator == AND && !item.isConditionPositionsValid())
+
+            else -> item.isComplete()
+        }
+
+        else -> item?.isComplete() ?: false
+    }
 
     private fun onEditedActionIntentExtraUpdated(extras: List<IntentExtra<out Any>>) {
         val action = editedItem.value

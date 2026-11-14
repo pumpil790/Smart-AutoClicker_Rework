@@ -338,6 +338,49 @@ class EditedItemsBuilder internal constructor(
             fingers = listOf(createNewGestureFinger())
         )
 
+    fun createNewSwipe(context: Context): Gesture {
+        val displaySize = displayConfigManager.displayConfig.sizePx
+        val zeroOffset = Position.Coordinates(
+            x = CoordinatesValue.Literal(0),
+            y = CoordinatesValue.Literal(0),
+        )
+        return Gesture(
+            id = actionsIdCreator.generateNewIdentifier(),
+            eventId = getEditedEventIdOrThrow(),
+            name = defaultValues.swipeName(context),
+            priority = 0,
+            fingers = listOf(
+                GestureFinger(
+                    id = gestureFingerIdCreator.generateNewIdentifier(),
+                    startTimeMs = 0L,
+                    motions = listOf(
+                        Press(
+                            id = gestureMotionIdCreator.generateNewIdentifier(),
+                            position = Position.Coordinates(
+                                x = CoordinatesValue.Literal(displaySize.x / 2),
+                                y = CoordinatesValue.Literal(displaySize.y * 2 / 3),
+                            ),
+                            offset = zeroOffset,
+                        ),
+                        Move(
+                            id = gestureMotionIdCreator.generateNewIdentifier(),
+                            position = Position.Coordinates(
+                                x = CoordinatesValue.Literal(displaySize.x / 2),
+                                y = CoordinatesValue.Literal(displaySize.y / 3),
+                            ),
+                            offset = zeroOffset,
+                            durationMs = defaultValues.swipeDuration(context),
+                        ),
+                        Release(
+                            id = gestureMotionIdCreator.generateNewIdentifier(),
+                            hold = Release.Hold.None,
+                        ),
+                    ),
+                )
+            ),
+        )
+    }
+
     fun createNewPause(context: Context): Pause =
         Pause(
             id = actionsIdCreator.generateNewIdentifier(),

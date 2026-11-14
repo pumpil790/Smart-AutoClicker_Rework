@@ -25,6 +25,7 @@ import com.buzbuz.smartautoclicker.feature.smart.config.ui.common.uistate.action
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.common.uistate.action.getPauseIconRes
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.common.uistate.action.getSetTextIconRes
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.common.uistate.action.getGestureIconRes
+import com.buzbuz.smartautoclicker.feature.smart.config.ui.common.uistate.action.getSwipeIconRes
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.common.uistate.action.getSystemActionIconRes
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.common.uistate.action.getToggleEventIconRes
 
@@ -51,6 +52,12 @@ sealed class ActionTypeChoice(
         R.string.item_click_title,
         R.string.item_click_desc,
         getClickIconRes(),
+    )
+    /** Swipe Action choice. */
+    data object Swipe : ActionTypeChoice(
+        R.string.item_swipe_title,
+        R.string.item_swipe_desc,
+        getSwipeIconRes(),
     )
     /** Gesture Action choice. */
     data object Gesture : ActionTypeChoice(

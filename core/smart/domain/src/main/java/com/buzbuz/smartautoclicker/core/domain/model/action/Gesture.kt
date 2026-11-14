@@ -20,6 +20,10 @@ import android.accessibilityservice.GestureDescription
 import com.buzbuz.smartautoclicker.core.base.identifier.Identifier
 import com.buzbuz.smartautoclicker.core.base.interfaces.areComplete
 import com.buzbuz.smartautoclicker.core.domain.model.action.gesture.GestureFinger
+import com.buzbuz.smartautoclicker.core.domain.model.action.gesture.GestureFingerMotion
+import com.buzbuz.smartautoclicker.core.domain.model.action.position.CoordinatesValue
+import com.buzbuz.smartautoclicker.core.domain.model.action.position.Position
+import com.buzbuz.smartautoclicker.core.domain.model.action.position.Positionable
 
 /**
  * Gesture action.
@@ -68,4 +72,41 @@ data class Gesture(
     /** @return the total duration of the gesture in milliseconds, from its start to the release of the last finger. */
     fun getDurationMs(): Long =
         fingers.maxOfOrNull { finger -> finger.getDurationMs() } ?: 0L
+
+    /** @return true if this gesture represents a simple single-finger swipe (Press -> Move -> Release). */
+    fun isSimpleSwipe(): Boolean {
+        val finger = fingers.singleOrNull() ?: return false
+        if (finger.startTimeMs != 0L || finger.motions.size != 3) return false
+
+        val press = finger.motions[0] as? GestureFingerMotion.Press ?: return false
+        val move = finger.motions[1] as? GestureFingerMotion.Move ?: return false
+        val release = finger.motions[2] as? GestureFingerMotion.Release ?: return false
+
+        return press.offset == NO_OFFSET &&
+            move.offset == NO_OFFSET &&
+            release.hold == GestureFingerMotion.Release.Hold.None
+    }
+
+    /** @return true if any motion in this gesture uses a condition position. */
+    fun hasConditionPositions(): Boolean =
+        fingers.any { finger ->
+            finger.motions.any { motion ->
+                motion is Positionable && motion.position is Position.Condition
+            }
+        }
+
+    /** @return true if every condition-based motion position has a non-null condition id (required for AND events). */
+    fun isConditionPositionsValid(): Boolean =
+        fingers.all { finger ->
+            finger.motions.all { motion ->
+                motion !is Positionable ||
+                    motion.position !is Position.Condition ||
+                    (motion.position as Position.Condition).conditionId != null
+            }
+        }
 }
+
+private val NO_OFFSET = Position.Coordinates(
+    x = CoordinatesValue.Literal(0),
+    y = CoordinatesValue.Literal(0),
+)

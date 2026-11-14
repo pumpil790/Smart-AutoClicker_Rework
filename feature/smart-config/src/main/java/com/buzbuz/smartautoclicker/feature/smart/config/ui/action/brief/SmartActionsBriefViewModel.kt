@@ -154,6 +154,7 @@ class SmartActionsBriefViewModel @Inject constructor(
             buildList {
                 if (canCopy) add(ActionTypeChoice.Copy)
                 add(ActionTypeChoice.Click)
+                add(ActionTypeChoice.Swipe)
                 add(ActionTypeChoice.Gesture)
                 add(ActionTypeChoice.Pause)
                 add(ActionTypeChoice.SetText)

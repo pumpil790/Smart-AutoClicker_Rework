@@ -58,7 +58,7 @@ internal fun EditedListState<Action>.toItemBriefs(context: Context, parent: Even
 @DrawableRes
 internal fun Action.getIconRes(): Int = when (this) {
     is Click -> getClickIconRes()
-    is Gesture -> getGestureIconRes()
+    is Gesture -> if (isSimpleSwipe()) getSwipeIconRes() else getGestureIconRes()
     is Pause -> getPauseIconRes()
     is Intent -> getIntentIconRes()
     is ToggleEvent -> getToggleEventIconRes()
@@ -70,7 +70,9 @@ internal fun Action.getIconRes(): Int = when (this) {
 
 internal fun Action.getActionDescription(context: Context, parent: Event?, inError: Boolean): String = when (this) {
     is Click -> getDescription(context, parent, inError)
-    is Gesture -> getDescription(context, inError)
+    is Gesture ->
+        if (isSimpleSwipe()) getSwipeDescription(context, parent, inError)
+        else getDescription(context, inError)
     is Pause -> getDescription(context, inError)
     is Intent -> getDescription(context, inError)
     is ToggleEvent -> getDescription(context, inError)

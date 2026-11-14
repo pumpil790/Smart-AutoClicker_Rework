@@ -40,6 +40,7 @@ import com.buzbuz.smartautoclicker.feature.smart.config.ui.action.pause.PauseDia
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.action.selection.ActionTypeChoice
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.action.selection.ActionTypeSelectionDialog
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.action.settext.SetTextDialog
+import com.buzbuz.smartautoclicker.feature.smart.config.ui.action.swipe.SwipeDialog
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.action.system.SystemActionDialog
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.action.toggleevent.ToggleEventDialog
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.common.starters.newNotificationPermissionStarterOverlay
@@ -57,6 +58,7 @@ internal interface ActionConfigurator {
 
 internal fun EditionRepository.createNewAction(context: Context, choice: ActionTypeChoice): Action = when (choice) {
     ActionTypeChoice.Click -> editedItemsBuilder.createNewClick(context)
+    ActionTypeChoice.Swipe -> editedItemsBuilder.createNewSwipe(context)
     ActionTypeChoice.Gesture -> editedItemsBuilder.createNewGesture(context)
     ActionTypeChoice.Pause -> editedItemsBuilder.createNewPause(context)
     ActionTypeChoice.Intent -> editedItemsBuilder.createNewIntent(context)
@@ -110,7 +112,9 @@ internal fun BaseOverlay.showActionConfigDialog(configurator: ActionConfigurator
 
     val overlay = when (action) {
         is Click -> ClickDialog(actionConfigDialogListener)
-        is Gesture -> GestureDialog(actionConfigDialogListener)
+        is Gesture ->
+            if (action.isSimpleSwipe()) SwipeDialog(actionConfigDialogListener)
+            else GestureDialog(actionConfigDialogListener)
         is Pause -> PauseDialog(actionConfigDialogListener)
         is Intent -> IntentDialog(actionConfigDialogListener)
         is SystemAction -> SystemActionDialog(actionConfigDialogListener)

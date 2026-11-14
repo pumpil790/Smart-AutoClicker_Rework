@@ -56,6 +56,15 @@
     <string name="item_click_desc">Нажать где-нибудь на экране</string>
     <string name="item_click_details_on_condition">During %1$s on %2$s</string>
     <string name="item_click_details_at_position">During %1$s</string>
+
+    <string name="item_swipe_title">Свайп</string>
+    <string name="item_swipe_desc">Провести пальцем от одной точки или условия к другой</string>
+    <string name="item_swipe_details_at_position">В течение %1$s</string>
+    <string name="item_swipe_details_on_conditions">В течение %1$s • %2$s → %3$s</string>
+    <string name="item_swipe_endpoint_coords">[%1$s, %2$s]</string>
+    <string name="item_swipe_endpoint_condition_unknown">Обнаруженное условие</string>
+    <string name="item_swipe_endpoint_condition_error">Неверное условие</string>
+
     <string name="item_gesture_title">Жест</string>
     <string name="item_gesture_desc">Выполнить сложный жест на экране</string>
     <plurals name="item_gesture_details">
@@ -292,8 +301,18 @@
 
     <!-- Dialog Action Swipe ======================================================================================= -->
 
+    <string name="dialog_title_swipe">Свайп</string>
 
+    <string name="input_field_label_swipe_duration">Длительность свайпа (мс)</string>
 
+    <string name="field_swipe_mode_title">Режим свайпа</string>
+    <string name="field_swipe_mode_desc_position">Свайп по координатам на экране</string>
+    <string name="field_swipe_mode_desc_on_condition">Свайп по условиям: От условия 2 → До условия 1</string>
+
+    <string name="button_title_swipe_pick_positions">Выбрать обе точки на экране</string>
+
+    <string name="field_swipe_from_title">От (начало)</string>
+    <string name="field_swipe_to_title">До (конец)</string>
 
     <!-- Dialog Action Pause ======================================================================================= -->
 

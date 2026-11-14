@@ -27,8 +27,11 @@ import com.buzbuz.smartautoclicker.core.domain.model.OR
 import com.buzbuz.smartautoclicker.core.domain.model.action.Action
 import com.buzbuz.smartautoclicker.core.domain.model.action.ChangeCounter
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
+import com.buzbuz.smartautoclicker.core.domain.model.action.Gesture
 import com.buzbuz.smartautoclicker.core.domain.model.action.Pause
 import com.buzbuz.smartautoclicker.core.domain.model.action.ToggleEvent
+import com.buzbuz.smartautoclicker.core.domain.model.action.gesture.GestureFinger
+import com.buzbuz.smartautoclicker.core.domain.model.action.gesture.GestureFingerMotion
 import com.buzbuz.smartautoclicker.core.domain.model.action.position.CoordinatesValue
 import com.buzbuz.smartautoclicker.core.domain.model.action.position.Position
 import com.buzbuz.smartautoclicker.core.domain.model.action.toggleevent.EventToggle
@@ -257,6 +260,48 @@ class ScreenEventsEditorTest {
     }
 
     @Test
+    fun `AND event condition removal deletes gestures referencing it`() {
+        val condition1 = condition(1)
+        val condition2 = condition(2)
+        val swipeReferencingRemoved = swipe(1, Position.Condition(condition2.id), Position.Condition(condition1.id))
+        val swipeNotReferencingRemoved = swipe(2, Position.Condition(condition2.id), coordinates())
+        val event = event(
+            id = 1,
+            conditionOperator = AND,
+            conditions = listOf(condition1, condition2),
+            actions = listOf(swipeReferencingRemoved, swipeNotReferencingRemoved),
+        )
+        editor.startEdition(listOf(event))
+        editor.startItemEdition(event)
+
+        editor.conditionsEditor.startItemEdition(condition1)
+        editor.conditionsEditor.deleteEditedItem()
+
+        assertEquals(listOf(swipeNotReferencingRemoved), editor.actionsEditor.editedList.value)
+    }
+
+    @Test
+    fun `OR event condition update clears gesture condition references`() {
+        val condition1 = condition(1)
+        val condition2 = condition(2)
+        val swipeWithRefs = swipe(1, Position.Condition(condition2.id), Position.Condition(condition1.id))
+        val event = event(
+            id = 1,
+            conditionOperator = OR,
+            conditions = listOf(condition1),
+            actions = listOf(swipeWithRefs),
+        )
+        editor.startEdition(listOf(event))
+        editor.startItemEdition(event)
+
+        editor.conditionsEditor.startItemEdition(condition2)
+        editor.conditionsEditor.upsertEditedItem()
+
+        val expectedSwipe = swipe(1, Position.Condition(null), Position.Condition(null))
+        assertEquals(listOf(expectedSwipe), editor.actionsEditor.editedList.value)
+    }
+
+    @Test
     fun `condition removal deletes change counters using it as operation value`() {
         listOf(AND, OR).forEach { operator ->
             val condition1 = condition(1)
@@ -390,6 +435,36 @@ class ScreenEventsEditorTest {
         priority = 0,
         pressDuration = 100L,
         position = position,
+    )
+
+    private fun swipe(id: Long, fromPosition: Position, toPosition: Position) = Gesture(
+        id = Identifier(databaseId = id),
+        eventId = EVENT_ID,
+        name = "swipe",
+        priority = 0,
+        fingers = listOf(
+            GestureFinger(
+                id = Identifier(databaseId = id * 10 + 1),
+                startTimeMs = 0L,
+                motions = listOf(
+                    GestureFingerMotion.Press(
+                        id = Identifier(databaseId = id * 10 + 2),
+                        position = fromPosition,
+                        offset = Position.Coordinates(CoordinatesValue.Literal(0), CoordinatesValue.Literal(0)),
+                    ),
+                    GestureFingerMotion.Move(
+                        id = Identifier(databaseId = id * 10 + 3),
+                        position = toPosition,
+                        offset = Position.Coordinates(CoordinatesValue.Literal(0), CoordinatesValue.Literal(0)),
+                        durationMs = 250L,
+                    ),
+                    GestureFingerMotion.Release(
+                        id = Identifier(databaseId = id * 10 + 4),
+                        hold = GestureFingerMotion.Release.Hold.None,
+                    ),
+                ),
+            )
+        ),
     )
 
     private fun changeCounter(id: Long, operationValue: CounterOperationValue) = ChangeCounter(

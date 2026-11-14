@@ -21,7 +21,10 @@ import com.buzbuz.smartautoclicker.core.domain.model.OR
 import com.buzbuz.smartautoclicker.core.domain.model.action.Action
 import com.buzbuz.smartautoclicker.core.domain.model.action.ChangeCounter
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
+import com.buzbuz.smartautoclicker.core.domain.model.action.Gesture
+import com.buzbuz.smartautoclicker.core.domain.model.action.gesture.GestureFingerMotion
 import com.buzbuz.smartautoclicker.core.domain.model.action.position.Position
+import com.buzbuz.smartautoclicker.core.domain.model.action.position.Positionable
 import com.buzbuz.smartautoclicker.core.domain.model.condition.ScreenCondition
 import com.buzbuz.smartautoclicker.core.domain.model.counter.CounterOperationValue
 import com.buzbuz.smartautoclicker.core.domain.model.event.ScreenEvent
@@ -47,6 +50,22 @@ internal class ScreenEventsEditor(
                         if (value is CounterOperationValue.Condition && value.conditionId != null &&
                             conditions.none { it.id == value.conditionId }) {
                             newActions.remove(action)
+                        }
+                    }
+
+                    action is Gesture -> {
+                        val hasMissingCondition = editedEvent.conditionOperator == AND && action.fingers.any { finger ->
+                            finger.motions.any { motion ->
+                                motion is Positionable &&
+                                    motion.position is Position.Condition &&
+                                    conditions.none { it.id == (motion.position as Position.Condition).conditionId }
+                            }
+                        }
+
+                        if (hasMissingCondition) {
+                            newActions.remove(action)
+                        } else if (editedEvent.conditionOperator == OR && action.hasConditionPositions()) {
+                            newActions[newActions.indexOf(action)] = action.clearConditionIdsForOr()
                         }
                     }
 
@@ -80,5 +99,25 @@ internal class ScreenEventsEditor(
         conditions: List<ScreenCondition>,
         actions: List<Action>,
     ): ScreenEvent = event.copy(conditions = conditions, actions = actions)
+
+    private fun Gesture.clearConditionIdsForOr(): Gesture = copy(
+        fingers = fingers.map { finger ->
+            finger.copy(
+                motions = finger.motions.map { motion ->
+                    when (motion) {
+                        is GestureFingerMotion.Press ->
+                            if (motion.position is Position.Condition)
+                                motion.copy(position = Position.Condition(conditionId = null))
+                            else motion
+                        is GestureFingerMotion.Move ->
+                            if (motion.position is Position.Condition)
+                                motion.copy(position = Position.Condition(conditionId = null))
+                            else motion
+                        else -> motion
+                    }
+                }
+            )
+        }
+    )
 
 }

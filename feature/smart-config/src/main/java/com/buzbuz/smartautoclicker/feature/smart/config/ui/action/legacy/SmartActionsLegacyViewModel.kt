@@ -60,6 +60,7 @@ class SmartActionsLegacyViewModel @Inject constructor(
     // The legacy dialog exposes copy through its own button, not through the type selection
     override fun getActionTypeChoices(): List<ActionTypeChoice> = listOf(
         ActionTypeChoice.Click,
+        ActionTypeChoice.Swipe,
         ActionTypeChoice.Gesture,
         ActionTypeChoice.Pause,
         ActionTypeChoice.SetText,

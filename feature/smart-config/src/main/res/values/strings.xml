@@ -76,6 +76,14 @@
     <string name="item_click_details_on_condition_unknown">During %1$s on detected condition</string>
     <string name="item_click_details_at_position">During %1$s</string>
 
+    <string name="item_swipe_title">Swipe</string>
+    <string name="item_swipe_desc">Swipe from one point or condition to another</string>
+    <string name="item_swipe_details_at_position">During %1$s</string>
+    <string name="item_swipe_details_on_conditions">During %1$s • %2$s → %3$s</string>
+    <string name="item_swipe_endpoint_coords">[%1$s, %2$s]</string>
+    <string name="item_swipe_endpoint_condition_unknown">Detected condition</string>
+    <string name="item_swipe_endpoint_condition_error">Invalid condition</string>
+
     <string name="item_gesture_title">Gesture</string>
     <string name="item_gesture_desc">Execute a complex gesture on the screen</string>
     <plurals name="item_gesture_details">
@@ -365,6 +373,21 @@
     <string name="field_click_offset_x" translatable="false">X</string>
     <string name="field_click_offset_y" translatable="false">Y</string>
 
+
+    <!-- Dialog Action Swipe ======================================================================================= -->
+
+    <string name="dialog_title_swipe">Swipe</string>
+
+    <string name="input_field_label_swipe_duration">Swipe duration (ms)</string>
+
+    <string name="field_swipe_mode_title">Swipe on</string>
+    <string name="field_swipe_mode_desc_position">Swipe between selected screen coordinates</string>
+    <string name="field_swipe_mode_desc_on_condition">Swipe from Condition 2 to Condition 1</string>
+
+    <string name="button_title_swipe_pick_positions">Pick both points on screen</string>
+
+    <string name="field_swipe_from_title">From (start)</string>
+    <string name="field_swipe_to_title">To (end)</string>
 
     <!-- Dialog Action Gesture ======================================================================================= -->
     <!-- Smart specific keys for gesture. Base keys are shared with dumb, in core:ui module -->

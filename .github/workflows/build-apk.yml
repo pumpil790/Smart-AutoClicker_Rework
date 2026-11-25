@@ -3,7 +3,11 @@ name: Build APK
 on:
   push:
     branches: [ master ]
+    tags: [ 'v*' ]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -37,4 +41,33 @@ jobs:
         with:
           name: smartautoclicker-arm64-v8a-debug-apk
           path: smartautoclicker/build/outputs/apk/fDroid/debug/*arm64-v8a*.apk
+
+      - name: Publish APK to GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          APK_PATH=$(ls smartautoclicker/build/outputs/apk/fDroid/debug/*arm64-v8a*.apk | head -n 1)
+          RELEASE_APK="Klick_r-Rework-arm64-v8a.apk"
+          cp "$APK_PATH" "$RELEASE_APK"
+
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+            RELEASE_TITLE="Klick'r Rework ${TAG_NAME} (arm64-v8a)"
+          else
+            TAG_NAME="latest"
+            RELEASE_TITLE="Klick'r Rework Latest (arm64-v8a)"
+          fi
+
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            gh release upload "$TAG_NAME" "$RELEASE_APK" --clobber
+            gh release edit "$TAG_NAME" --target "$GITHUB_SHA" --title "$RELEASE_TITLE" --latest
+          else
+            gh release create "$TAG_NAME" "$RELEASE_APK" \
+              --target "$GITHUB_SHA" \
+              --title "$RELEASE_TITLE" \
+              --notes "Сборка Klick'r Rework для Poco X3 Pro (arm64-v8a), без рекламы/биллинга, с отдельным Swipe on condition, улучшенным OCR и поддержкой строковых переменных и .txt-списков." \
+              --latest
+          fi
+
 

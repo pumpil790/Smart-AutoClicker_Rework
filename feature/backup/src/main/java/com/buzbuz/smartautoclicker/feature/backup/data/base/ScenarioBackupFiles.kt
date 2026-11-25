@@ -84,3 +84,10 @@ internal const val CONDITION_BACKUP_MATCH_REGEX =
 internal const val LEGACY_CONDITION_BACKUP_MATCH_REGEX =
     """[0-9]+/$CONDITION_FILE_PREFIX-?[0-9]+"""
 
+/**
+ * Regex matching a wordlist `.txt` file inside a scenario backup folder.
+ * Will match any file like "scenarioId/wordlists/wardrobe.txt".
+ */
+internal const val WORDLIST_BACKUP_MATCH_REGEX =
+    """[0-9]+/wordlists/[^/]+\.txt"""
+

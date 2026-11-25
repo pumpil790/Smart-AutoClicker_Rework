@@ -19,12 +19,14 @@ package com.buzbuz.smartautoclicker.core.domain.model.action.mapper
 import com.buzbuz.smartautoclicker.core.base.identifier.DATABASE_ID_INSERTION
 import com.buzbuz.smartautoclicker.core.database.entity.ActionEntity
 import com.buzbuz.smartautoclicker.core.database.entity.ActionType
+import com.buzbuz.smartautoclicker.core.database.entity.CaptureTargetType
 import com.buzbuz.smartautoclicker.core.database.entity.CoordinatesType
 import com.buzbuz.smartautoclicker.core.database.entity.GestureFingerEntity
 import com.buzbuz.smartautoclicker.core.database.entity.GestureFingerMotionEntity
 import com.buzbuz.smartautoclicker.core.database.entity.GestureFingerMotionType
 import com.buzbuz.smartautoclicker.core.domain.model.counter.CounterOperationValue
 import com.buzbuz.smartautoclicker.core.domain.model.action.Action
+import com.buzbuz.smartautoclicker.core.domain.model.action.CaptureText
 import com.buzbuz.smartautoclicker.core.domain.model.action.ChangeCounter
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
 import com.buzbuz.smartautoclicker.core.domain.model.action.Gesture
@@ -53,6 +55,7 @@ internal fun Action.toEntity(): ActionEntity {
         is Notification -> toNotificationEntity()
         is SystemAction -> toSystemActionEntity()
         is SetText -> toSetTextEntity()
+        is CaptureText -> toCaptureTextEntity()
     }
 }
 
@@ -213,6 +216,26 @@ private fun SetText.toSetTextEntity(): ActionEntity =
         type = ActionType.TEXT,
         textValue = text,
         textValidateInput = validateInput,
+    )
+
+private fun CaptureText.toCaptureTextEntity(): ActionEntity =
+    ActionEntity(
+        id = id.databaseId,
+        eventId = eventId.databaseId,
+        priority = priority,
+        name = name!!,
+        type = ActionType.CAPTURE_TEXT,
+        detectionAreaLeft = detectionArea.left,
+        detectionAreaTop = detectionArea.top,
+        detectionAreaRight = detectionArea.right,
+        detectionAreaBottom = detectionArea.bottom,
+        textAlphabet = alphabet.name,
+        captureTextTargetType = when (targetType) {
+            CaptureText.TargetType.STRING_VAR -> CaptureTargetType.STRING_VAR
+            CaptureText.TargetType.FILE_LIST -> CaptureTargetType.FILE_LIST
+        },
+        captureTextTargetName = targetName,
+        captureDeduplicate = deduplicate,
     )
 
 private fun CoordinatesValue.toCoordinatesType(): CoordinatesType =

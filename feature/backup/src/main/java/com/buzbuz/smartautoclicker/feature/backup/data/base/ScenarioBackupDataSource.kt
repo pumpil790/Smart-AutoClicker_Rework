@@ -106,9 +106,14 @@ internal abstract class ScenarioBackupDataSource<Backup, BackupScenario>(private
 
             // Copy all additional files in the scenario folder of the zip archive
             additionalFilesPaths.forEach { additionalPath ->
+                val file = File(appDataDir, additionalPath)
+                if (!file.exists()) {
+                    Log.w(TAG, "Skipping missing additional file $additionalPath")
+                    return@forEach
+                }
                 Log.d(TAG, "Add backup additional file to archive $additionalPath")
                 putNextEntry(ZipEntry("$entryPrefix$additionalPath"))
-                writeEntryFile(File(appDataDir, additionalPath))
+                writeEntryFile(file)
             }
         }
     }
@@ -142,16 +147,22 @@ internal abstract class ScenarioBackupDataSource<Backup, BackupScenario>(private
      * @param fileName the additional file name.
      */
     private fun extractAdditionalFileFromZip(zipStream: ZipInputStream, fileName: String): Boolean {
-        val startIndex = fileName.lastIndexOf('/') + 1
-        if (startIndex <= 0) {
+        val firstSlashIndex = fileName.indexOf('/')
+        if (firstSlashIndex <= 0 || firstSlashIndex >= fileName.length - 1) {
             Log.w(TAG, "Invalid additional file path.")
             return false
         }
 
-        val additionalFile = File(
-            appDataDir,
-            fileName.substring(startIndex),
-        )
+        val relativePath = fileName.substring(firstSlashIndex + 1)
+        if (relativePath.contains("..")) {
+            Log.w(TAG, "Unsafe additional file path: $fileName")
+            return false
+        }
+
+        val additionalFile = File(appDataDir, relativePath)
+        additionalFile.parentFile?.let { parent ->
+            if (!parent.exists()) parent.mkdirs()
+        }
 
         if (additionalFile.exists()) {
             Log.d(TAG, "Additional file $fileName already exist, skip it.")

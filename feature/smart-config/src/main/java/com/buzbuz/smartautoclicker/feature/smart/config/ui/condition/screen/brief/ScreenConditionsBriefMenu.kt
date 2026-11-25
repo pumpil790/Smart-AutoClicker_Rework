@@ -51,6 +51,7 @@ import com.buzbuz.smartautoclicker.feature.smart.config.ui.condition.screen.imag
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.condition.screen.number.NumberConditionDialog
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.condition.screen.selection.ScreenConditionTypeSelectionDialog
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.condition.screen.text.TextConditionDialog
+import com.buzbuz.smartautoclicker.feature.smart.config.ui.condition.screen.textlist.TextListCheckConditionDialog
 
 import kotlinx.coroutines.launch
 
@@ -211,6 +212,10 @@ class ScreenConditionsBriefMenu(
                         ScreenConditionTypeChoice.OnTextDetected -> viewModel.createTextCondition(context) { condition ->
                             showScreenConditionConfigDialog(condition)
                         }
+
+                        ScreenConditionTypeChoice.OnTextListCheck -> viewModel.createTextListCheckCondition(context) { condition ->
+                            showScreenConditionConfigDialog(condition)
+                        }
                     }
                 },
                 onCancelledListener = {},
@@ -259,6 +264,7 @@ class ScreenConditionsBriefMenu(
                 is ScreenCondition.Image -> ImageConditionDialog(conditionConfigDialogListener)
                 is ScreenCondition.Number -> NumberConditionDialog(conditionConfigDialogListener)
                 is ScreenCondition.Text -> TextConditionDialog(conditionConfigDialogListener)
+                is ScreenCondition.TextListCheck -> TextListCheckConditionDialog(conditionConfigDialogListener)
             },
             hideCurrent = true,
         )

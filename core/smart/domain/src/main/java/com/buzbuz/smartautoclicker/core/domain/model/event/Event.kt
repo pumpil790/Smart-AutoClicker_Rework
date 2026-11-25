@@ -24,6 +24,7 @@ import com.buzbuz.smartautoclicker.core.base.interfaces.Prioritizable
 import com.buzbuz.smartautoclicker.core.base.interfaces.areComplete
 import com.buzbuz.smartautoclicker.core.domain.model.AND
 import com.buzbuz.smartautoclicker.core.domain.model.action.Action
+import com.buzbuz.smartautoclicker.core.domain.model.action.CaptureText
 import com.buzbuz.smartautoclicker.core.domain.model.condition.ScreenCondition
 import com.buzbuz.smartautoclicker.core.domain.model.ConditionOperator
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
@@ -128,6 +129,7 @@ data class TriggerEvent(
         return when (this) {
             is Click -> position is Position.Coordinates
             is Gesture -> !hasConditionPositions()
+            is CaptureText -> false
 
             else -> true
         }

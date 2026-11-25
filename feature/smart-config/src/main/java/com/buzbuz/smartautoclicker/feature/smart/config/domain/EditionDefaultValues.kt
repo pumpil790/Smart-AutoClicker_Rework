@@ -86,6 +86,9 @@ internal class EditionDefaultValues {
     fun setTextName(context: Context): String =
         context.getString(R.string.default_set_text_name)
 
+    fun captureTextName(context: Context): String =
+        context.getString(R.string.default_capture_text_name)
+
     fun counterComparisonOperation(): ComparisonOperation =
         ComparisonOperation.EQUALS
 }

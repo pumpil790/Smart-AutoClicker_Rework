@@ -19,6 +19,7 @@ package com.buzbuz.smartautoclicker.feature.smart.config.domain.usecase.copy.ref
 import android.util.Log
 
 import com.buzbuz.smartautoclicker.core.domain.model.action.Action
+import com.buzbuz.smartautoclicker.core.domain.model.action.CaptureText
 import com.buzbuz.smartautoclicker.core.domain.model.action.ChangeCounter
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
 import com.buzbuz.smartautoclicker.core.domain.model.action.Gesture
@@ -122,6 +123,7 @@ class ReplaceMissingCounterReferenceUseCase @Inject constructor() {
             is Notification -> replaceCounterReference(oldName, newName)
             is SetText -> replaceCounterReference(oldName, newName)
 
+            is CaptureText,
             is Intent,
             is Pause,
             is SystemAction,
@@ -202,6 +204,7 @@ class ReplaceMissingCounterReferenceUseCase @Inject constructor() {
             is ScreenCondition.Color,
             is ScreenCondition.Image,
             is ScreenCondition.Text,
+            is ScreenCondition.TextListCheck,
             is TriggerCondition.OnBroadcastReceived,
             is TriggerCondition.OnTimerReached -> {
                 Log.e(TAG, "Can't replace counter reference, condition type is not supported.")

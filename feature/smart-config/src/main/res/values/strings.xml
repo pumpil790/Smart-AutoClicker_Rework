@@ -648,5 +648,54 @@
     <string name="content_desc_image_condition">The image to be detected</string>
     <string name="content_desc_open_event_list">Open the event list</string>
     <string name="content_desc_application_icon">The icon of the application to start.</string>
+    <string name="content_desc_edit_wordlist">Edit text list</string>
+    <string name="content_desc_export_wordlist">Export text list</string>
+    <string name="content_desc_delete_wordlist">Delete text list</string>
+
+    <!-- Text list condition, Capture text action & Wordlists ======================================================= -->
+
+    <string name="default_capture_text_name">Capture text</string>
+    <string name="item_text_list_condition_title">Text in list / variable</string>
+    <string name="item_text_list_condition_desc">Check screen text against a .txt list or a string variable</string>
+    <string name="item_capture_text_title">Capture text</string>
+    <string name="item_capture_text_desc">Read text from screen into a string variable or append to a .txt list</string>
+    <string name="item_capture_text_details_var">Save to variable \"%1$s\"</string>
+    <string name="item_capture_text_details_list">Append to list \"%1$s.txt\"</string>
+
+    <string name="dialog_title_text_list_condition">Text list / variable condition</string>
+    <string name="field_text_list_mode_title">Comparison source</string>
+    <string name="field_text_list_mode_desc_file">Check against lines in a .txt list</string>
+    <string name="field_text_list_mode_desc_var">Compare with a runtime string variable</string>
+    <string name="field_text_list_target_label_file">List name (.txt)</string>
+    <string name="field_text_list_target_label_var">String variable name</string>
+    <string name="field_text_list_match_type_title">Matching mode</string>
+    <string name="field_text_list_match_type_desc_fuzzy">Fuzzy similarity / substring (tolerant to case endings and OCR typos)</string>
+    <string name="field_text_list_match_type_desc_exact">Exact match after normalization (lowercase, ё=е, trimmed)</string>
+    <string name="field_text_list_threshold_title">Minimum similarity</string>
+
+    <string name="dialog_title_capture_text_action">Capture text</string>
+    <string name="field_capture_text_target_type_title">Destination</string>
+    <string name="field_capture_text_target_type_desc_var">Save recognized text into a string variable</string>
+    <string name="field_capture_text_target_type_desc_list">Append recognized text to a .txt list</string>
+    <string name="field_capture_text_deduplicate_title">Skip duplicates</string>
+    <string name="field_capture_text_deduplicate_desc_disabled">Always append recognized text</string>
+    <string name="field_capture_text_deduplicate_desc_enabled">Do not append if already present (normalized)</string>
+
+    <string name="field_wordlists_title">Text lists (.txt)</string>
+    <string name="field_wordlists_desc_empty">No text list created yet</string>
+    <string name="field_wordlists_desc">%1$d text list(s)</string>
+    <string name="dialog_title_wordlists_config">Text lists (.txt)</string>
+    <string name="dialog_title_wordlist_editor">Edit text list</string>
+    <string name="message_empty_wordlists_title">No text lists</string>
+    <string name="message_empty_wordlists_desc">Create a .txt list or import one from your device to use with text list conditions and text capture</string>
+    <string name="item_wordlist_entries_count">%1$d line(s)</string>
+    <string name="field_wordlist_name_label">List name</string>
+    <string name="field_wordlist_entries_hint">One entry per line</string>
+    <string name="button_title_pick_wordlist">Pick / manage .txt list</string>
+    <string name="button_title_import_txt">Import .txt</string>
+    <string name="button_title_export_txt">Export .txt</string>
+    <string name="toast_wordlist_imported">Imported %1$d line(s) into \"%2$s.txt\"</string>
+    <string name="toast_wordlist_exported">Exported \"%1$s.txt\"</string>
+    <string name="toast_wordlist_io_error">Failed to read/write .txt file</string>
 
 </resources>

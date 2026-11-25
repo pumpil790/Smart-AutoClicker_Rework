@@ -17,6 +17,7 @@
 package com.buzbuz.smartautoclicker.core.processing.data.processor
 
 import android.graphics.Bitmap
+import android.graphics.Point
 
 import com.buzbuz.smartautoclicker.core.detection.ImageDetector
 import com.buzbuz.smartautoclicker.core.detection.NumberFormatType as DetectionNumberFormatType
@@ -27,8 +28,10 @@ import com.buzbuz.smartautoclicker.core.domain.model.counter.CounterOperationVal
 import com.buzbuz.smartautoclicker.core.domain.model.OR
 import com.buzbuz.smartautoclicker.core.domain.model.condition.Condition
 import com.buzbuz.smartautoclicker.core.domain.model.condition.ScreenCondition
+import com.buzbuz.smartautoclicker.core.domain.model.condition.TextListCompareMode
 import com.buzbuz.smartautoclicker.core.domain.model.condition.TriggerCondition
 import com.buzbuz.smartautoclicker.core.domain.model.counter.ComparisonOperation
+import com.buzbuz.smartautoclicker.core.domain.wordlists.TextMatchingUtils
 import com.buzbuz.smartautoclicker.core.processing.data.processor.state.ProcessingState
 import com.buzbuz.smartautoclicker.core.processing.data.scaling.ScalingManager
 import com.buzbuz.smartautoclicker.core.processing.data.scaling.ScreenConditionScalingInfo
@@ -47,6 +50,7 @@ internal class ConditionsVerifier(
     private val scalingManager: ScalingManager,
     private val bitmapSupplier: suspend (String, Int, Int) -> Bitmap?,
     private val progressListener: SmartProcessingListener? = null,
+    private val frameTextReadCache: FrameTextReadCache = FrameTextReadCache(imageDetector),
 ) {
 
     /** List of results for the last call to verifyConditions. */
@@ -88,6 +92,7 @@ internal class ConditionsVerifier(
             is ScreenCondition.Color -> verifyColorCondition(condition)
             is ScreenCondition.Image -> verifyImageCondition(condition)
             is ScreenCondition.Text -> verifyTextCondition(condition)
+            is ScreenCondition.TextListCheck -> verifyTextListCheckCondition(condition)
             is ScreenCondition.Number -> verifyNumberCondition(condition)
             is TriggerCondition -> condition.toConditionResult(verifyTriggerCondition(condition))
         }
@@ -265,6 +270,58 @@ internal class ConditionsVerifier(
             position = scalingManager.scaleUpDetectionResult(detectionResult.position),
             confidenceRate = detectionResult.confidenceRate,
             size = scalingManager.scaleUpDetectionResult(detectionResult.size),
+        )
+
+        progressListener?.onScreenConditionProcessingCompleted(result)
+        return result
+    }
+
+    private fun verifyTextListCheckCondition(condition: ScreenCondition.TextListCheck): ProcessedConditionResult.Screen {
+        progressListener?.onScreenConditionProcessingStarted()
+
+        val conditionScalingInfo = scalingManager
+            .getScreenConditionScalingInfo(condition) as? ScreenConditionScalingInfo.TextListCheck
+            ?: return condition.toInvalidConditionResult()
+
+        val readResult = frameTextReadCache.readText(
+            recognitionModelId = condition.alphabet.name,
+            scaledArea = conditionScalingInfo.detectionArea,
+        )
+
+        val (isMatched, scorePercent) = when (condition.compareMode) {
+            TextListCompareMode.EQUALS_STRING_VAR -> {
+                val targetValue = state.getStringVariable(condition.targetName)
+                if (targetValue.isNullOrBlank()) {
+                    false to 0.0
+                } else {
+                    TextMatchingUtils.matchText(
+                        recognizedText = readResult.text,
+                        targetText = targetValue,
+                        matchType = condition.matchType,
+                        thresholdPercent = condition.threshold,
+                    )
+                }
+            }
+
+            TextListCompareMode.IN_FILE_LIST -> {
+                val entries = state.getWordlistEntries(condition.targetName)
+                TextMatchingUtils.matchAgainstList(
+                    recognizedText = readResult.text,
+                    entries = entries,
+                    matchType = condition.matchType,
+                    thresholdPercent = condition.threshold,
+                )
+            }
+        }
+
+        val box = if (!readResult.boundingBox.isEmpty) readResult.boundingBox else conditionScalingInfo.detectionArea
+        val result = ProcessedConditionResult.Screen(
+            isFulfilled = isMatched == condition.shouldBeDetected,
+            haveBeenDetected = isMatched,
+            condition = condition,
+            position = scalingManager.scaleUpDetectionResult(Point(box.centerX(), box.centerY())),
+            confidenceRate = scorePercent,
+            size = scalingManager.scaleUpDetectionResult(Point(box.width(), box.height())),
         )
 
         progressListener?.onScreenConditionProcessingCompleted(result)

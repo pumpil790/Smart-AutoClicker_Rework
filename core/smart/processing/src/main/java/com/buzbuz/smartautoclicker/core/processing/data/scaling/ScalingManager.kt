@@ -37,6 +37,7 @@ class ScalingManager @Inject constructor(
 
     private var detectionQuality: Double = QUALITY_MAX
     private var scalingRatio: Double = 1.0
+    private var scaledScreenBounds: Rect = Rect()
 
 
     internal fun startScaling(quality: Double, screenEvents: List<ScreenEvent>): Point {
@@ -68,6 +69,15 @@ class ScalingManager @Inject constructor(
     internal fun scaleUpDetectionResult(result: Point): Point =
         result.scaleUp()
 
+    internal fun scaleDownDetectionArea(area: Rect): Rect {
+        val scaled = area.scaleDown()
+        return if (!scaledScreenBounds.isEmpty) {
+            scaled.coerceIn(bounds = scaledScreenBounds).ensureMinSize()
+        } else {
+            scaled.ensureMinSize()
+        }
+    }
+
 
     private fun refreshScalingMetrics(): Point {
         val displaySize: Point = displayConfigManager.displayConfig.sizePx
@@ -78,6 +88,7 @@ class ScalingManager @Inject constructor(
             else detectionQuality / biggestScreenSideSize
 
         val scaledScreenSize = displaySize.scaleDown()
+        scaledScreenBounds = scaledScreenSize.toArea()
 
         Log.i(TAG, "Scaling metrics refreshed: ratio=$scalingRatio, screenSize=$displaySize, " +
                 "scaledScreenSize=$scaledScreenSize")
@@ -94,6 +105,7 @@ class ScalingManager @Inject constructor(
                 is ScreenCondition.Image -> screenCondition.toImageScalingInfo(scaledScreenSize)
                 is ScreenCondition.Number -> screenCondition.toNumberScalingInfo(scaledScreenSize)
                 is ScreenCondition.Text -> screenCondition.toTextScalingInfo(scaledScreenSize)
+                is ScreenCondition.TextListCheck -> screenCondition.toTextListCheckScalingInfo(scaledScreenSize)
             }
         }
 
@@ -128,6 +140,17 @@ class ScalingManager @Inject constructor(
 
     private fun ScreenCondition.Text.toTextScalingInfo(scaledScreenSize: Point): ScreenConditionScalingInfo.Text =
         ScreenConditionScalingInfo.Text(
+            screenCondition = this,
+            detectionArea = detectionArea
+                .scaleDown()
+                .coerceIn(bounds = scaledScreenSize.toArea())
+                .ensureMinSize()
+        )
+
+    private fun ScreenCondition.TextListCheck.toTextListCheckScalingInfo(
+        scaledScreenSize: Point,
+    ): ScreenConditionScalingInfo.TextListCheck =
+        ScreenConditionScalingInfo.TextListCheck(
             screenCondition = this,
             detectionArea = detectionArea
                 .scaleDown()

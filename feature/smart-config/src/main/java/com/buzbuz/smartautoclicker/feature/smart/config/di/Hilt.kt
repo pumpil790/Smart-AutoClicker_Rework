@@ -20,6 +20,7 @@ import com.buzbuz.smartautoclicker.core.common.overlays.di.OverlayComponent
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.mainmenu.MainMenuModel
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.action.selection.ActionTypeSelectionViewModel
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.action.brief.SmartActionsBriefViewModel
+import com.buzbuz.smartautoclicker.feature.smart.config.ui.action.capturetext.CaptureTextViewModel
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.action.changecounter.ChangeCounterViewModel
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.action.click.ClickViewModel
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.action.gesture.GestureDialogViewModel
@@ -49,6 +50,7 @@ import com.buzbuz.smartautoclicker.feature.smart.config.ui.condition.screen.numb
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.condition.screen.selection.ScreenConditionSelectionViewModel
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.condition.screen.selection.ScreenConditionTypeSelectionViewModel
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.condition.screen.text.TextConditionViewModel
+import com.buzbuz.smartautoclicker.feature.smart.config.ui.condition.screen.textlist.TextListCheckConditionViewModel
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.condition.trigger.TriggerConditionListViewModel
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.condition.trigger.broadcast.BroadcastReceivedConditionViewModel
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.condition.trigger.selection.TriggerConditionTypeSelectionViewModel
@@ -73,6 +75,7 @@ import com.buzbuz.smartautoclicker.feature.smart.config.ui.scenario.more.debugvi
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.scenario.imageevents.ImageEventListViewModel
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.scenario.more.MoreViewModel
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.scenario.triggerevents.TriggerEventListViewModel
+import com.buzbuz.smartautoclicker.feature.smart.config.ui.wordlists.WordlistsConfigViewModel
 
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -85,6 +88,7 @@ interface ScenarioConfigViewModelsEntryPoint {
     fun actionTypeSelectionViewModel(): ActionTypeSelectionViewModel
     fun activitySelectionViewModel(): ActivitySelectionModel
     fun broadcastReceivedConditionViewModel(): BroadcastReceivedConditionViewModel
+    fun captureTextViewModel(): CaptureTextViewModel
     fun captureViewModel(): CaptureViewModel
     fun colorCaptureViewModel(): ColorCaptureViewModel
     fun colorConditionViewModel(): ColorConditionViewModel
@@ -132,9 +136,11 @@ interface ScenarioConfigViewModelsEntryPoint {
     fun swipeViewModel(): SwipeViewModel
     fun systemActionViewModel(): SystemActionViewModel
     fun textConditionViewModel(): TextConditionViewModel
+    fun textListCheckConditionViewModel(): TextListCheckConditionViewModel
     fun timerReachedConditionViewModel(): TimerReachedConditionViewModel
     fun toggleEventViewModel(): ToggleEventViewModel
     fun triggerConditionTypeSelectionViewModel(): TriggerConditionTypeSelectionViewModel
     fun triggerConditionsViewModel(): TriggerConditionListViewModel
     fun triggerEventListViewModel(): TriggerEventListViewModel
+    fun wordlistsConfigViewModel(): WordlistsConfigViewModel
 }

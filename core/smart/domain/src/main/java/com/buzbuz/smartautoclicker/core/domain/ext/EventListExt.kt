@@ -17,6 +17,7 @@
 package com.buzbuz.smartautoclicker.core.domain.ext
 
 import com.buzbuz.smartautoclicker.code.smart.detectionmodels.text.domain.OCRAlphabet
+import com.buzbuz.smartautoclicker.core.domain.model.action.CaptureText
 import com.buzbuz.smartautoclicker.core.domain.model.action.ChangeCounter
 import com.buzbuz.smartautoclicker.core.domain.model.condition.ScreenCondition
 import com.buzbuz.smartautoclicker.core.domain.model.condition.TriggerCondition
@@ -41,7 +42,11 @@ fun List<Event>.getAllOCRAlphabets(): Set<OCRAlphabet> =
         this@getAllOCRAlphabets.forEach { event ->
             (event as? ScreenEvent)?.conditions?.forEach { condition ->
                 if (condition is ScreenCondition.Text) add(condition.alphabet)
+                if (condition is ScreenCondition.TextListCheck) add(condition.alphabet)
                 if (condition is ScreenCondition.Number) add(OCRAlphabet.LATIN)
+            }
+            event.actions.forEach { action ->
+                if (action is CaptureText) add(action.alphabet)
             }
         }
     }

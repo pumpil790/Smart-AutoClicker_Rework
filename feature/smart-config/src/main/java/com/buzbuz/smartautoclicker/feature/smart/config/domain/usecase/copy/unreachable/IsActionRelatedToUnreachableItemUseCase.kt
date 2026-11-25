@@ -19,6 +19,7 @@ package com.buzbuz.smartautoclicker.feature.smart.config.domain.usecase.copy.unr
 import com.buzbuz.smartautoclicker.core.base.identifier.Identifier
 import com.buzbuz.smartautoclicker.core.common.actions.text.findCounterReferences
 import com.buzbuz.smartautoclicker.core.domain.model.action.Action
+import com.buzbuz.smartautoclicker.core.domain.model.action.CaptureText
 import com.buzbuz.smartautoclicker.core.domain.model.action.ChangeCounter
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
 import com.buzbuz.smartautoclicker.core.domain.model.action.Gesture
@@ -57,6 +58,7 @@ class IsActionRelatedToUnreachableItemUseCase @Inject constructor(
             is ToggleEvent -> action.isRelatedToUnreachableItem(copyResultEvents)
 
             // Nothing is referenced in those actions
+            is CaptureText,
             is Intent,
             is Pause,
             is SystemAction -> false

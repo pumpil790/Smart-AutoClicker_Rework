@@ -22,6 +22,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 
 import com.buzbuz.smartautoclicker.core.base.data.AppComponentsProvider
+import com.buzbuz.smartautoclicker.core.domain.wordlists.IWordlistRepository
 import com.buzbuz.smartautoclicker.core.smart.debugging.domain.DebuggingRepository
 import com.buzbuz.smartautoclicker.feature.smart.config.R
 import com.buzbuz.smartautoclicker.feature.smart.config.domain.EditionRepository
@@ -42,6 +43,7 @@ class MoreViewModel @Inject constructor(
     editionRepository: EditionRepository,
     private val appComponentsProvider: AppComponentsProvider,
     private val debuggingRepository: DebuggingRepository,
+    private val wordlistRepository: IWordlistRepository,
 ) : ViewModel() {
 
     /** Tells if the debug view is enabled or not. */
@@ -62,6 +64,12 @@ class MoreViewModel @Inject constructor(
         .map { counters ->
             if (counters.isEmpty()) context.getString(R.string.field_counters_desc_empty)
             else context.getString(R.string.field_counters_desc, counters.size)
+        }
+
+    val wordlistsFieldDescription: Flow<String> = wordlistRepository.wordlists
+        .map { lists ->
+            if (lists.isEmpty()) context.getString(R.string.field_wordlists_desc_empty)
+            else context.getString(R.string.field_wordlists_desc, lists.size)
         }
 
     init {

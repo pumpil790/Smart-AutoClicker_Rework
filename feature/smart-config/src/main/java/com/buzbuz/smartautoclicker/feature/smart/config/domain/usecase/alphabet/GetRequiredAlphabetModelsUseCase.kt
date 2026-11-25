@@ -20,6 +20,7 @@ import com.buzbuz.smartautoclicker.code.smart.detectionmodels.text.OCRModelsRepo
 import com.buzbuz.smartautoclicker.code.smart.detectionmodels.text.domain.OCRAlphabet
 import com.buzbuz.smartautoclicker.code.smart.detectionmodels.text.domain.OCRModel
 import com.buzbuz.smartautoclicker.core.domain.IRepository
+import com.buzbuz.smartautoclicker.core.domain.model.action.CaptureText
 import com.buzbuz.smartautoclicker.core.domain.model.condition.ScreenCondition
 import com.buzbuz.smartautoclicker.core.domain.model.event.ScreenEvent
 import kotlinx.coroutines.flow.Flow
@@ -43,6 +44,10 @@ class GetRequiredAlphabetModelsUseCase @Inject constructor(
                 events.forEach { event ->
                     event.conditions.forEach { condition ->
                         if (condition is ScreenCondition.Text) add(condition.alphabet)
+                        if (condition is ScreenCondition.TextListCheck) add(condition.alphabet)
+                    }
+                    event.actions.forEach { action ->
+                        if (action is CaptureText) add(action.alphabet)
                     }
                 }
             }

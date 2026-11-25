@@ -562,4 +562,48 @@
 
     <string name="warning_dialog_message_delete">Вы собираетесь удалить этот элемент, вы уверены?</string>
 
+    <string name="default_capture_text_name">Захват текста</string>
+    <string name="item_text_list_condition_title">Текст в списке / переменной</string>
+    <string name="item_text_list_condition_desc">Проверить текст на экране по .txt списку или строковой переменной</string>
+    <string name="item_capture_text_title">Захват текста</string>
+    <string name="item_capture_text_desc">Распознать текст с экрана в строковую переменную или дописать в .txt список</string>
+    <string name="item_capture_text_details_var">В переменную «%1$s»</string>
+    <string name="item_capture_text_details_list">Дописать в список «%1$s.txt»</string>
+
+    <string name="dialog_title_text_list_condition">Проверка текста по списку</string>
+    <string name="field_text_list_mode_title">Источник сравнения</string>
+    <string name="field_text_list_mode_desc_file">Искать среди строк файла .txt</string>
+    <string name="field_text_list_mode_desc_var">Сравнить со строковой переменной</string>
+    <string name="field_text_list_target_label_file">Имя списка (.txt)</string>
+    <string name="field_text_list_target_label_var">Имя строковой переменной</string>
+    <string name="field_text_list_match_type_title">Режим сравнения</string>
+    <string name="field_text_list_match_type_desc_fuzzy">Нечёткое сравнение (учитывает падежи и опечатки OCR)</string>
+    <string name="field_text_list_match_type_desc_exact">Точное совпадение (нижний регистр, ё=е, без крайних знаков)</string>
+    <string name="field_text_list_threshold_title">Минимальное сходство</string>
+
+    <string name="dialog_title_capture_text_action">Захват текста</string>
+    <string name="field_capture_text_target_type_title">Куда сохранить</string>
+    <string name="field_capture_text_target_type_desc_var">Сохранить текст в строковую переменную</string>
+    <string name="field_capture_text_target_type_desc_list">Дописать строку в .txt список</string>
+    <string name="field_capture_text_deduplicate_title">Пропускать дубликаты</string>
+    <string name="field_capture_text_deduplicate_desc_disabled">Всегда дописывать распознанный текст</string>
+    <string name="field_capture_text_deduplicate_desc_enabled">Не дописывать, если строка уже есть в списке</string>
+
+    <string name="field_wordlists_title">Текстовые списки (.txt)</string>
+    <string name="field_wordlists_desc_empty">Списки ещё не созданы</string>
+    <string name="field_wordlists_desc">Списков: %1$d</string>
+    <string name="dialog_title_wordlists_config">Текстовые списки (.txt)</string>
+    <string name="dialog_title_wordlist_editor">Редактирование списка</string>
+    <string name="message_empty_wordlists_title">Нет текстовых списков</string>
+    <string name="message_empty_wordlists_desc">Создайте .txt список или импортируйте готовый файл с телефона</string>
+    <string name="item_wordlist_entries_count">Строк: %1$d</string>
+    <string name="field_wordlist_name_label">Имя списка</string>
+    <string name="field_wordlist_entries_hint">По одной записи на строку</string>
+    <string name="button_title_pick_wordlist">Выбрать / управлять .txt списками</string>
+    <string name="button_title_import_txt">Импорт .txt</string>
+    <string name="button_title_export_txt">Экспорт .txt</string>
+    <string name="toast_wordlist_imported">Импортировано строк: %1$d в «%2$s.txt»</string>
+    <string name="toast_wordlist_exported">Список «%1$s.txt» экспортирован</string>
+    <string name="toast_wordlist_io_error">Ошибка чтения/записи .txt файла</string>
+
 </resources>

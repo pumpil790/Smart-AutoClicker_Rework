@@ -31,6 +31,7 @@ import com.buzbuz.smartautoclicker.core.domain.model.action.Intent
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
 import com.buzbuz.smartautoclicker.core.domain.model.action.Pause
 import com.buzbuz.smartautoclicker.core.domain.model.action.ToggleEvent
+import com.buzbuz.smartautoclicker.core.domain.model.action.CaptureText
 import com.buzbuz.smartautoclicker.core.domain.model.action.ChangeCounter
 import com.buzbuz.smartautoclicker.core.domain.model.action.Gesture
 import com.buzbuz.smartautoclicker.core.domain.model.action.gesture.GestureFingerMotion
@@ -41,7 +42,9 @@ import com.buzbuz.smartautoclicker.core.domain.model.action.SystemAction
 import com.buzbuz.smartautoclicker.core.domain.model.action.intent.putDomainExtra
 import com.buzbuz.smartautoclicker.core.domain.model.event.Event
 import com.buzbuz.smartautoclicker.core.processing.data.processor.ConditionsResults
+import com.buzbuz.smartautoclicker.core.processing.data.processor.FrameTextReadCache
 import com.buzbuz.smartautoclicker.core.processing.data.processor.state.ProcessingState
+import com.buzbuz.smartautoclicker.core.processing.data.scaling.ScalingManager
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -63,6 +66,8 @@ internal class ActionExecutor(
     randomize: Boolean,
     private val unblockWorkaroundEnabled: Boolean = false,
     private val currentTimeMs: () -> Long = System::currentTimeMillis,
+    private val frameTextReadCache: FrameTextReadCache? = null,
+    private val scalingManager: ScalingManager? = null,
 ) {
 
     init { androidExecutor.resetState() }
@@ -113,6 +118,7 @@ internal class ActionExecutor(
                 is Notification -> executeNotification(event, action)
                 is SystemAction -> executeSystemAction(action)
                 is SetText -> executeSetText(action)
+                is CaptureText -> executeCaptureText(action)
             }
         }
     }
@@ -363,6 +369,27 @@ internal class ActionExecutor(
                 text = action.text.replaceCounterReferences(counters),
                 validate = action.validateInput,
             )
+        }
+    }
+
+    private fun executeCaptureText(action: CaptureText) {
+        val textCache = frameTextReadCache ?: return
+        if (action.detectionArea.isEmpty || action.targetName.isBlank()) return
+
+        val scaledArea = scalingManager?.scaleDownDetectionArea(action.detectionArea) ?: action.detectionArea
+        val readResult = textCache.readText(
+            recognitionModelId = action.alphabet.name,
+            scaledArea = scaledArea,
+        )
+        val capturedText = readResult.text.trim()
+        if (capturedText.isEmpty()) return
+
+        when (action.targetType) {
+            CaptureText.TargetType.STRING_VAR ->
+                processingState.setStringVariable(action.targetName, capturedText)
+
+            CaptureText.TargetType.FILE_LIST ->
+                processingState.appendToWordlist(action.targetName, capturedText, action.deduplicate)
         }
     }
 }

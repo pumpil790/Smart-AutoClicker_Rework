@@ -32,6 +32,7 @@ import com.buzbuz.smartautoclicker.core.bitmaps.CONDITION_FILE_PREFIX
 import com.buzbuz.smartautoclicker.core.display.config.DisplayConfigManager
 import com.buzbuz.smartautoclicker.core.domain.model.counter.CounterOperationValue
 import com.buzbuz.smartautoclicker.core.domain.model.action.Action
+import com.buzbuz.smartautoclicker.core.domain.model.action.CaptureText
 import com.buzbuz.smartautoclicker.core.domain.model.action.ChangeCounter
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
 import com.buzbuz.smartautoclicker.core.domain.model.action.Gesture
@@ -51,6 +52,8 @@ import com.buzbuz.smartautoclicker.core.domain.model.action.toggleevent.EventTog
 import com.buzbuz.smartautoclicker.core.domain.model.action.intent.IntentExtra
 import com.buzbuz.smartautoclicker.core.domain.model.action.position.CoordinatesValue
 import com.buzbuz.smartautoclicker.core.domain.model.condition.ScreenCondition
+import com.buzbuz.smartautoclicker.core.domain.model.condition.TextListCompareMode
+import com.buzbuz.smartautoclicker.core.domain.model.condition.TextMatchType
 import com.buzbuz.smartautoclicker.core.domain.model.condition.TriggerCondition
 import com.buzbuz.smartautoclicker.core.domain.model.counter.ComparisonOperation
 import com.buzbuz.smartautoclicker.core.domain.model.event.ScreenEvent
@@ -197,6 +200,24 @@ class EditedItemsBuilder internal constructor(
         )
     }
 
+    fun createNewTextListCheckCondition(context: Context): ScreenCondition.TextListCheck {
+        val id = conditionsIdCreator.generateNewIdentifier()
+
+        return ScreenCondition.TextListCheck(
+            id = id,
+            eventId = getEditedEventIdOrThrow(),
+            name = defaultValues.conditionName(context),
+            threshold = 80,
+            shouldBeDetected = defaultValues.conditionShouldBeDetected(),
+            priority = 0,
+            detectionArea = Rect(),
+            alphabet = OCRAlphabet.CYRILLIC,
+            compareMode = TextListCompareMode.IN_FILE_LIST,
+            matchType = TextMatchType.FUZZY_SUBSTRING,
+            targetName = "",
+        )
+    }
+
     suspend fun createNewImageCondition(context: Context, area: Rect, bitmap: Bitmap): ScreenCondition.Image {
         val id = conditionsIdCreator.generateNewIdentifier()
         val newPath = bitmapRepository.saveImageConditionBitmap(
@@ -224,6 +245,7 @@ class EditedItemsBuilder internal constructor(
             is ScreenCondition.Image -> createNewImageConditionFrom(condition, eventId)
             is ScreenCondition.Number -> createNewNumberConditionFrom(condition, eventId)
             is ScreenCondition.Text -> createNewTextConditionFrom(condition, eventId)
+            is ScreenCondition.TextListCheck -> createNewTextListCheckConditionFrom(condition, eventId)
         }
 
     private fun createNewColorConditionFrom(condition: ScreenCondition.Color, eventId: Identifier = getEditedEventIdOrThrow()): ScreenCondition.Color =
@@ -254,6 +276,18 @@ class EditedItemsBuilder internal constructor(
             eventId = eventId,
             name = "" + condition.name,
             text = "" + condition.text,
+        )
+
+    private fun createNewTextListCheckConditionFrom(
+        condition: ScreenCondition.TextListCheck,
+        eventId: Identifier = getEditedEventIdOrThrow(),
+    ): ScreenCondition.TextListCheck =
+        condition.copy(
+            id = conditionsIdCreator.generateNewIdentifier(),
+            eventId = eventId,
+            name = "" + condition.name,
+            targetName = "" + condition.targetName,
+            detectionArea = Rect(condition.detectionArea),
         )
 
     fun createNewOnBroadcastReceived(context: Context): TriggerCondition.OnBroadcastReceived =
@@ -470,6 +504,19 @@ class EditedItemsBuilder internal constructor(
             priority = 0,
         )
 
+    fun createNewCaptureText(context: Context): CaptureText =
+        CaptureText(
+            id = actionsIdCreator.generateNewIdentifier(),
+            eventId = getEditedEventIdOrThrow(),
+            name = defaultValues.captureTextName(context),
+            priority = 0,
+            detectionArea = Rect(),
+            alphabet = OCRAlphabet.CYRILLIC,
+            targetType = CaptureText.TargetType.STRING_VAR,
+            targetName = "",
+            deduplicate = true,
+        )
+
     fun createNewActionFrom(from: Action, eventId: Identifier = getEditedEventIdOrThrow()): Action = when (from) {
         is Click -> createNewClickFrom(from, eventId)
         is Gesture -> createNewGestureFrom(from, eventId)
@@ -480,6 +527,7 @@ class EditedItemsBuilder internal constructor(
         is Notification -> createNewNotificationFrom(from, eventId)
         is SystemAction -> createNewSystemActionFrom(from, eventId)
         is SetText -> createNewSetTextFrom(from, eventId)
+        is CaptureText -> createNewCaptureTextFrom(from, eventId)
     }
 
     private fun createNewClickFrom(from: Click, eventId: Identifier): Click =
@@ -682,6 +730,15 @@ class EditedItemsBuilder internal constructor(
             validateInput = from.validateInput,
         )
     }
+
+    private fun createNewCaptureTextFrom(from: CaptureText, eventId: Identifier): CaptureText =
+        from.copy(
+            id = actionsIdCreator.generateNewIdentifier(),
+            eventId = eventId,
+            name = "" + from.name,
+            detectionArea = Rect(from.detectionArea),
+            targetName = "" + from.targetName,
+        )
 
     private fun getEditedScenarioIdOrThrow(): Identifier =
         editor.editedScenario.value?.id

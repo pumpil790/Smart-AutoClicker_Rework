@@ -39,6 +39,7 @@ import com.buzbuz.smartautoclicker.core.domain.model.EXACT
 import com.buzbuz.smartautoclicker.core.domain.model.condition.ScreenCondition
 import com.buzbuz.smartautoclicker.core.domain.model.event.ScreenEvent
 import com.buzbuz.smartautoclicker.core.domain.model.scenario.Scenario
+import com.buzbuz.smartautoclicker.core.domain.wordlists.IWordlistRepository
 import com.buzbuz.smartautoclicker.core.processing.data.DetectorEngine
 import com.buzbuz.smartautoclicker.core.processing.data.DetectorState
 import com.buzbuz.smartautoclicker.core.processing.data.scaling.ScalingManager
@@ -242,6 +243,7 @@ class DetectorEngineBitmapCacheTests {
             appComponentsProvider = mockAppComponentsProvider,
             debuggingListener = mockDebuggingListener,
             ocrModelsRepository = mockOcrModelsRepository,
+            wordlistRepository = mockk<IWordlistRepository>(relaxed = true),
         )
 
         engine.startScreenRecord(0, mockIntent, null)

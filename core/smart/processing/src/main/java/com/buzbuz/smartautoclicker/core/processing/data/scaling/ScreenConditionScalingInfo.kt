@@ -39,6 +39,11 @@ internal sealed class ScreenConditionScalingInfo {
         override val detectionArea: Rect,
     ) : ScreenConditionScalingInfo()
 
+    data class TextListCheck(
+        override val screenCondition: ScreenCondition.TextListCheck,
+        override val detectionArea: Rect,
+    ) : ScreenConditionScalingInfo()
+
     data class Number(
         override val screenCondition: ScreenCondition.Number,
         override val detectionArea: Rect,

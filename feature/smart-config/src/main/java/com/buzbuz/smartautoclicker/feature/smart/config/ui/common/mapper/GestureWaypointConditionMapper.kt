@@ -63,6 +63,9 @@ private suspend fun ScreenCondition.toWaypointCondition(
         is ScreenCondition.Text ->
             text.takeIf { it.isNotEmpty() }?.let { GestureWaypointCondition(label = it) }
 
+        is ScreenCondition.TextListCheck ->
+            targetName.takeIf { it.isNotEmpty() }?.let { GestureWaypointCondition(label = it) }
+
         is ScreenCondition.Number -> GestureWaypointCondition(
             label = "${context.getString(comparisonOperation.toNameRes())} ${counterValue.toDisplayText()}",
         )

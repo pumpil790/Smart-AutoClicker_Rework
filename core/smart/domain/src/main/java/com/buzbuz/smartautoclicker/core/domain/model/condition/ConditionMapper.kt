@@ -22,6 +22,8 @@ import com.buzbuz.smartautoclicker.core.base.identifier.Identifier
 import com.buzbuz.smartautoclicker.core.database.entity.ConditionEntity
 import com.buzbuz.smartautoclicker.core.database.entity.ConditionType
 import com.buzbuz.smartautoclicker.core.database.entity.NumberFormatType as DbNumberFormatType
+import com.buzbuz.smartautoclicker.core.database.entity.TextListCompareMode as DbTextListCompareMode
+import com.buzbuz.smartautoclicker.core.database.entity.TextMatchType as DbTextMatchType
 import com.buzbuz.smartautoclicker.core.domain.model.counter.CounterOperationValue
 import com.buzbuz.smartautoclicker.core.domain.model.counter.getDomainCounterOperationValue
 import com.buzbuz.smartautoclicker.core.domain.model.counter.toDomain
@@ -33,6 +35,7 @@ internal fun Condition.toEntity() = when (this) {
     is ScreenCondition.Image -> toImageConditionEntity()
     is ScreenCondition.Number -> toNumberConditionEntity()
     is ScreenCondition.Text -> toTextConditionEntity()
+    is ScreenCondition.TextListCheck -> toTextListCheckConditionEntity()
     is TriggerCondition.OnBroadcastReceived -> toBroadcastReceivedEntity()
     is TriggerCondition.OnCounterCountReached -> toCounterReachedEntity()
     is TriggerCondition.OnTimerReached -> toTimerReachedEntity()
@@ -110,6 +113,24 @@ private fun ScreenCondition.Text.toTextConditionEntity() = ConditionEntity(
     detectionAreaBottom = detectionArea.bottom,
 )
 
+private fun ScreenCondition.TextListCheck.toTextListCheckConditionEntity() = ConditionEntity(
+    id = id.databaseId,
+    eventId = eventId.databaseId,
+    name = name,
+    priority = priority,
+    type = ConditionType.ON_TEXT_LIST_CHECK,
+    threshold = threshold,
+    shouldBeDetected = shouldBeDetected,
+    textAlphabet = alphabet.name,
+    detectionAreaLeft = detectionArea.left,
+    detectionAreaTop = detectionArea.top,
+    detectionAreaRight = detectionArea.right,
+    detectionAreaBottom = detectionArea.bottom,
+    textListMode = compareMode.toEntity(),
+    textListMatchType = matchType.toEntity(),
+    textTargetName = targetName,
+)
+
 private fun TriggerCondition.OnBroadcastReceived.toBroadcastReceivedEntity(): ConditionEntity =
     ConditionEntity(
         id = id.databaseId,
@@ -154,6 +175,7 @@ internal fun ConditionEntity.toDomain(cleanIds: Boolean = false): Condition =
         ConditionType.ON_IMAGE_DETECTED -> toDomainImageCondition(cleanIds)
         ConditionType.ON_NUMBER_DETECTED -> toDomainNumberCondition(cleanIds)
         ConditionType.ON_TEXT_DETECTED -> toDomainTextCondition(cleanIds)
+        ConditionType.ON_TEXT_LIST_CHECK -> toDomainTextListCheckCondition(cleanIds)
         ConditionType.ON_TIMER_REACHED -> toDomainTimerReached(cleanIds)
     }
 
@@ -211,6 +233,21 @@ private fun ConditionEntity.toDomainTextCondition(cleanIds: Boolean = false): Sc
         detectionArea = getDetectionArea()!!,
         text = textToDetect!!,
         alphabet = getTextAlphabet(),
+    )
+
+private fun ConditionEntity.toDomainTextListCheckCondition(cleanIds: Boolean = false): ScreenCondition.TextListCheck =
+    ScreenCondition.TextListCheck(
+        id = Identifier(id = id, asTemporary = cleanIds),
+        eventId = Identifier(id = eventId, asTemporary = cleanIds),
+        name = name,
+        priority = priority,
+        threshold = threshold ?: 80,
+        shouldBeDetected = shouldBeDetected ?: true,
+        detectionArea = getDetectionArea()!!,
+        alphabet = getTextAlphabet(),
+        compareMode = textListMode.toDomain(),
+        matchType = textListMatchType.toDomain(),
+        targetName = textTargetName ?: "",
     )
 
 private fun ConditionEntity.toDomainBroadcastReceived(cleanIds: Boolean = false): TriggerCondition =
@@ -271,3 +308,27 @@ private fun ConditionEntity.getTextAlphabet(): OCRAlphabet =
             OCRAlphabet.valueOf(it)
         } catch (_: IllegalArgumentException) { OCRAlphabet.LATIN }
     } ?: OCRAlphabet.LATIN
+
+private fun DbTextListCompareMode?.toDomain(): TextListCompareMode =
+    when (this) {
+        DbTextListCompareMode.EQUALS_STRING_VAR -> TextListCompareMode.EQUALS_STRING_VAR
+        DbTextListCompareMode.IN_FILE_LIST, null -> TextListCompareMode.IN_FILE_LIST
+    }
+
+private fun TextListCompareMode.toEntity(): DbTextListCompareMode =
+    when (this) {
+        TextListCompareMode.IN_FILE_LIST -> DbTextListCompareMode.IN_FILE_LIST
+        TextListCompareMode.EQUALS_STRING_VAR -> DbTextListCompareMode.EQUALS_STRING_VAR
+    }
+
+private fun DbTextMatchType?.toDomain(): TextMatchType =
+    when (this) {
+        DbTextMatchType.EXACT_NORMALIZED -> TextMatchType.EXACT_NORMALIZED
+        DbTextMatchType.FUZZY_SUBSTRING, null -> TextMatchType.FUZZY_SUBSTRING
+    }
+
+private fun TextMatchType.toEntity(): DbTextMatchType =
+    when (this) {
+        TextMatchType.EXACT_NORMALIZED -> DbTextMatchType.EXACT_NORMALIZED
+        TextMatchType.FUZZY_SUBSTRING -> DbTextMatchType.FUZZY_SUBSTRING
+    }

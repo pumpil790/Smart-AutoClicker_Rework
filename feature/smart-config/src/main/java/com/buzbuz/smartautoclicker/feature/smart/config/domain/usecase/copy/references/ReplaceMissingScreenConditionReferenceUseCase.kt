@@ -20,6 +20,7 @@ import android.util.Log
 
 import com.buzbuz.smartautoclicker.core.base.identifier.Identifier
 import com.buzbuz.smartautoclicker.core.domain.model.action.Action
+import com.buzbuz.smartautoclicker.core.domain.model.action.CaptureText
 import com.buzbuz.smartautoclicker.core.domain.model.action.ChangeCounter
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
 import com.buzbuz.smartautoclicker.core.domain.model.action.Gesture
@@ -98,6 +99,7 @@ class ReplaceMissingScreenConditionReferenceUseCase @Inject constructor() {
                 return null
             }
 
+            is CaptureText,
             is Intent,
             is Notification,
             is Pause,

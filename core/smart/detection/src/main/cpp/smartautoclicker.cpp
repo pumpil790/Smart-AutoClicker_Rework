@@ -29,6 +29,58 @@
 
 using namespace smartautoclicker;
 
+namespace {
+
+    /**
+     * Safely converts standard UTF-8 std::string to a JNI jstring via UTF-16,
+     * avoiding JNI NewStringUTF crashes on 4-byte supplementary UTF-8 characters or malformed bytes.
+     */
+    jstring utf8ToJString(JNIEnv* env, const std::string& utf8) {
+        std::vector<jchar> utf16;
+        utf16.reserve(utf8.size());
+
+        const auto* data = reinterpret_cast<const unsigned char*>(utf8.data());
+        const size_t len = utf8.size();
+        size_t i = 0;
+
+        while (i < len) {
+            uint32_t cp = 0;
+            unsigned char c = data[i];
+            if (c < 0x80) {
+                cp = c;
+                i += 1;
+            } else if ((c & 0xE0) == 0xC0 && i + 1 < len && (data[i + 1] & 0xC0) == 0x80) {
+                cp = ((c & 0x1F) << 6) | (data[i + 1] & 0x3F);
+                i += 2;
+            } else if ((c & 0xF0) == 0xE0 && i + 2 < len &&
+                       (data[i + 1] & 0xC0) == 0x80 && (data[i + 2] & 0xC0) == 0x80) {
+                cp = ((c & 0x0F) << 12) | ((data[i + 1] & 0x3F) << 6) | (data[i + 2] & 0x3F);
+                i += 3;
+            } else if ((c & 0xF8) == 0xF0 && i + 3 < len &&
+                       (data[i + 1] & 0xC0) == 0x80 && (data[i + 2] & 0xC0) == 0x80 &&
+                       (data[i + 3] & 0xC0) == 0x80) {
+                cp = ((c & 0x07) << 18) | ((data[i + 1] & 0x3F) << 12) |
+                     ((data[i + 2] & 0x3F) << 6) | (data[i + 3] & 0x3F);
+                i += 4;
+            } else {
+                i += 1;
+                continue;
+            }
+
+            if (cp <= 0xFFFF) {
+                utf16.push_back(static_cast<jchar>(cp));
+            } else if (cp <= 0x10FFFF) {
+                cp -= 0x10000;
+                utf16.push_back(static_cast<jchar>(0xD800 + (cp >> 10)));
+                utf16.push_back(static_cast<jchar>(0xDC00 + (cp & 0x3FF)));
+            }
+        }
+
+        return env->NewString(utf16.data(), static_cast<jsize>(utf16.size()));
+    }
+
+} // namespace
+
 extern "C" {
 
     JNIEXPORT jlong JNICALL Java_com_buzbuz_smartautoclicker_core_detection_NativeDetector_newDetector(
@@ -212,6 +264,48 @@ extern "C" {
         }
 
         return nullptr;
+    }
+
+    JNIEXPORT jstring JNICALL Java_com_buzbuz_smartautoclicker_core_detection_NativeDetector_readTextNative(
+            JNIEnv *env,
+            jobject self,
+            jstring recognitionModelId,
+            jint x,
+            jint y,
+            jint width,
+            jint height,
+            jdoubleArray outMetrics
+    ) {
+        auto detector = getDetectorFromJavaRef(env, self);
+        if (!detector) return nullptr;
+
+        const char* nativeRecognitionModelId = env->GetStringUTFChars(recognitionModelId, nullptr);
+        if (nativeRecognitionModelId == nullptr) return nullptr;
+
+        jstring resultString = nullptr;
+        try {
+            TextReadResult readResult = detector->readText(
+                    nativeRecognitionModelId,
+                    cv::Rect(x, y, width, height));
+
+            if (outMetrics != nullptr && env->GetArrayLength(outMetrics) >= 5) {
+                jdouble metrics[5] = {
+                        static_cast<double>(readResult.confidence),
+                        static_cast<double>(readResult.boundingBox.x),
+                        static_cast<double>(readResult.boundingBox.y),
+                        static_cast<double>(readResult.boundingBox.x + readResult.boundingBox.width),
+                        static_cast<double>(readResult.boundingBox.y + readResult.boundingBox.height)
+                };
+                env->SetDoubleArrayRegion(outMetrics, 0, 5, metrics);
+            }
+
+            resultString = utf8ToJString(env, readResult.text);
+        } catch (...) {
+            throwRuntimeException(env, "Invalid detection arguments for readText");
+        }
+
+        env->ReleaseStringUTFChars(recognitionModelId, nativeRecognitionModelId);
+        return resultString;
     }
 
     JNIEXPORT void JNICALL Java_com_buzbuz_smartautoclicker_core_detection_NativeDetector_releaseScreenImage(

@@ -18,6 +18,7 @@ package com.buzbuz.smartautoclicker.feature.smart.config.data
 
 import com.buzbuz.smartautoclicker.core.domain.model.AND
 import com.buzbuz.smartautoclicker.core.domain.model.action.Action
+import com.buzbuz.smartautoclicker.core.domain.model.action.CaptureText
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
 import com.buzbuz.smartautoclicker.core.domain.model.action.Gesture
 import com.buzbuz.smartautoclicker.core.domain.model.action.position.Position
@@ -82,6 +83,11 @@ internal class ActionsEditor<Parent>(
             is ScreenEvent ->
                 item.isComplete() && !(parent.conditionOperator == AND && !item.isConditionPositionsValid())
 
+            else -> item.isComplete()
+        }
+
+        is CaptureText -> when (parent) {
+            is TriggerEvent -> false
             else -> item.isComplete()
         }
 

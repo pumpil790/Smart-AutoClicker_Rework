@@ -50,6 +50,11 @@ sealed class ScreenConditionTypeChoice(
         R.string.item_text_condition_desc,
         R.drawable.ic_text_condition,
     )
+    data object OnTextListCheck : ScreenConditionTypeChoice(
+        R.string.item_text_list_condition_title,
+        R.string.item_text_list_condition_desc,
+        R.drawable.ic_text_condition,
+    )
 }
 
 fun allScreenConditionChoices() = listOf(
@@ -57,4 +62,5 @@ fun allScreenConditionChoices() = listOf(
     ScreenConditionTypeChoice.OnImageDetected,
     ScreenConditionTypeChoice.OnNumberDetected,
     ScreenConditionTypeChoice.OnTextDetected,
+    ScreenConditionTypeChoice.OnTextListCheck,
 )

@@ -25,6 +25,7 @@ import androidx.lifecycle.viewModelScope
 
 import com.buzbuz.smartautoclicker.core.domain.IRepository
 import com.buzbuz.smartautoclicker.core.domain.model.action.Action
+import com.buzbuz.smartautoclicker.core.domain.model.action.CaptureText
 import com.buzbuz.smartautoclicker.core.domain.model.action.ChangeCounter
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
 import com.buzbuz.smartautoclicker.core.domain.model.action.Gesture
@@ -248,6 +249,7 @@ class DebugReportTimelineViewModel @Inject constructor(
             is ChangeCounter -> R.drawable.ic_change_counter
             is Notification -> R.drawable.ic_action_notification
             is SetText -> R.drawable.ic_action_set_text
+            is CaptureText -> R.drawable.ic_text_condition
             is SystemAction -> R.drawable.ic_action_system
         }
 }

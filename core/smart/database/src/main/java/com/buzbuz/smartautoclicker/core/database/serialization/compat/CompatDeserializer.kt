@@ -32,6 +32,7 @@ import com.buzbuz.smartautoclicker.core.base.extensions.getRect
 import com.buzbuz.smartautoclicker.core.base.interfaces.containsId
 import com.buzbuz.smartautoclicker.core.database.entity.ActionEntity
 import com.buzbuz.smartautoclicker.core.database.entity.ActionType
+import com.buzbuz.smartautoclicker.core.database.entity.CaptureTargetType
 import com.buzbuz.smartautoclicker.core.database.entity.ChangeCounterOperationType
 import com.buzbuz.smartautoclicker.core.database.entity.CompleteActionEntity
 import com.buzbuz.smartautoclicker.core.database.entity.CompleteEventEntity
@@ -57,6 +58,8 @@ import com.buzbuz.smartautoclicker.core.database.entity.IntentExtraType
 import com.buzbuz.smartautoclicker.core.database.entity.NumberFormatType
 import com.buzbuz.smartautoclicker.core.database.entity.ScenarioEntity
 import com.buzbuz.smartautoclicker.core.database.entity.SystemActionType
+import com.buzbuz.smartautoclicker.core.database.entity.TextListCompareMode
+import com.buzbuz.smartautoclicker.core.database.entity.TextMatchType
 import com.buzbuz.smartautoclicker.core.database.serialization.Deserializer
 
 import kotlinx.serialization.json.JsonArray
@@ -284,6 +287,7 @@ internal open class CompatDeserializer : Deserializer() {
             ConditionType.ON_IMAGE_DETECTED -> deserializeConditionImageDetected(jsonCondition)
             ConditionType.ON_NUMBER_DETECTED -> deserializeConditionNumberDetected(jsonCondition)
             ConditionType.ON_TEXT_DETECTED -> deserializeConditionTextDetected(jsonCondition)
+            ConditionType.ON_TEXT_LIST_CHECK -> deserializeConditionTextListCheck(jsonCondition)
             ConditionType.ON_TIMER_REACHED -> deserializeConditionTimerReached(jsonCondition)
             null -> null
         }
@@ -453,6 +457,33 @@ internal open class CompatDeserializer : Deserializer() {
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    open fun deserializeConditionTextListCheck(jsonCondition: JsonObject): ConditionEntity? {
+        val id = jsonCondition.getLong("id", true) ?: return null
+        val eventId = jsonCondition.getLong("eventId", true) ?: return null
+        val targetName = jsonCondition.getString("textTargetName") ?: return null
+        val area = jsonCondition.getRect("detectionAreaLeft", "detectionAreaTop", "detectionAreaRight", "detectionAreaBottom")
+            ?: return null
+
+        return ConditionEntity(
+            id = id,
+            eventId = eventId,
+            priority = jsonCondition.getInt("priority") ?: 0,
+            name = jsonCondition.getString("name") ?: "",
+            type = ConditionType.ON_TEXT_LIST_CHECK,
+            shouldBeDetected = jsonCondition.getBoolean("shouldBeDetected") ?: true,
+            threshold = jsonCondition.getInt("threshold")?.coerceIn(1, 100) ?: 80,
+            detectionAreaLeft = area.left,
+            detectionAreaTop = area.top,
+            detectionAreaRight = area.right,
+            detectionAreaBottom = area.bottom,
+            textAlphabet = jsonCondition.getString("textAlphabet") ?: "CYRILLIC",
+            textListMode = jsonCondition.getEnum<TextListCompareMode>("textListMode") ?: TextListCompareMode.IN_FILE_LIST,
+            textListMatchType = jsonCondition.getEnum<TextMatchType>("textListMatchType") ?: TextMatchType.FUZZY_SUBSTRING,
+            textTargetName = targetName,
+        )
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     open fun deserializeConditionTimerReached(jsonCondition: JsonObject): ConditionEntity? {
         val id = jsonCondition.getLong("id", true) ?: return null
         val eventId = jsonCondition.getLong("eventId", true) ?: return null
@@ -494,6 +525,7 @@ internal open class CompatDeserializer : Deserializer() {
             ActionType.NOTIFICATION -> deserializeActionNotification(jsonAction)
             ActionType.SYSTEM -> deserializeActionSystem(jsonAction)
             ActionType.TEXT -> deserializeActionSetText(jsonAction)
+            ActionType.CAPTURE_TEXT -> deserializeActionCaptureText(jsonAction)
             null -> null
         }
 
@@ -666,6 +698,32 @@ internal open class CompatDeserializer : Deserializer() {
             type = ActionType.TEXT,
             textValue = jsonSetText.getString("textValue") ?: "",
             textValidateInput = jsonSetText.getBoolean("textValidateInput") ?: false,
+        )
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    open fun deserializeActionCaptureText(jsonCaptureText: JsonObject): ActionEntity? {
+        val id = jsonCaptureText.getLong("id", true) ?: return null
+        val eventId = jsonCaptureText.getLong("eventId", true) ?: return null
+        val area = jsonCaptureText.getRect("detectionAreaLeft", "detectionAreaTop", "detectionAreaRight", "detectionAreaBottom")
+            ?: return null
+        val targetName = jsonCaptureText.getString("captureTextTargetName") ?: return null
+
+        return ActionEntity(
+            id = id,
+            eventId = eventId,
+            name = jsonCaptureText.getString("name") ?: "",
+            priority = jsonCaptureText.getInt("priority")?.coerceAtLeast(0) ?: 0,
+            type = ActionType.CAPTURE_TEXT,
+            detectionAreaLeft = area.left,
+            detectionAreaTop = area.top,
+            detectionAreaRight = area.right,
+            detectionAreaBottom = area.bottom,
+            textAlphabet = jsonCaptureText.getString("textAlphabet") ?: "CYRILLIC",
+            captureTextTargetType = jsonCaptureText.getEnum<CaptureTargetType>("captureTextTargetType")
+                ?: CaptureTargetType.STRING_VAR,
+            captureTextTargetName = targetName,
+            captureDeduplicate = jsonCaptureText.getBoolean("captureDeduplicate") ?: true,
         )
     }
 

@@ -75,4 +75,12 @@ fun IncludeScreenConditionVisualizationBinding.setCondition(
             visualizationText.text = condition.text
             null
         }
+
+        is ScreenCondition.TextListCheck -> {
+            conditionImage.visibility = View.GONE
+            visualizationText.visibility = View.VISIBLE
+
+            visualizationText.text = condition.targetName
+            null
+        }
     }

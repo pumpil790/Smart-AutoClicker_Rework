@@ -46,6 +46,7 @@ sealed class ScreenCondition : Condition(), Prioritizable {
             is Image -> copy(eventId = eventId, priority = priority, threshold = threshold, shouldBeDetected = shouldBeDetected)
             is Number -> copy(eventId = eventId, priority = priority, threshold = threshold)
             is Text -> copy(eventId = eventId, priority = priority, threshold = threshold, shouldBeDetected = shouldBeDetected)
+            is TextListCheck -> copy(eventId = eventId, priority = priority, threshold = threshold, shouldBeDetected = shouldBeDetected)
         }
 
     /**
@@ -151,5 +152,28 @@ sealed class ScreenCondition : Condition(), Prioritizable {
             name.hashCode() + text.hashCode() + threshold.hashCode() + shouldBeDetected.hashCode() +
                     detectionArea.hashCode() + priority.hashCode()
 
+    }
+
+    data class TextListCheck(
+        override val id: Identifier,
+        override val eventId: Identifier,
+        override val name: String,
+        override val threshold: Int,
+        override val shouldBeDetected: Boolean,
+        override var priority: Int,
+        val detectionArea: Rect,
+        val alphabet: OCRAlphabet,
+        val compareMode: TextListCompareMode,
+        val matchType: TextMatchType,
+        val targetName: String,
+    ) : ScreenCondition(), Prioritizable {
+
+        override fun isComplete(): Boolean =
+            super.isComplete() && targetName.isNotBlank() && !detectionArea.isEmpty
+
+        override fun hashCodeNoIds(): Int =
+            name.hashCode() + threshold.hashCode() + shouldBeDetected.hashCode() +
+                    detectionArea.hashCode() + priority.hashCode() + alphabet.hashCode() +
+                    compareMode.hashCode() + matchType.hashCode() + targetName.hashCode()
     }
 }

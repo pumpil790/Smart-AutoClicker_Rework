@@ -45,6 +45,7 @@ enum class MonitoredOverlayType {
     NOTIFICATION,
     SYSTEM_ACTION,
     SET_TEXT,
+    CAPTURE_TEXT,
     ACTION_TYPE_SELECTION,
     SMART_ACTIONS_LEGACY,
 
@@ -53,8 +54,13 @@ enum class MonitoredOverlayType {
     COLOR_CONDITION,
     NUMBER_CONDITION,
     TEXT_CONDITION,
+    TEXT_LIST_CHECK_CONDITION,
     SCREEN_CONDITION_TYPE_SELECTION,
     SCREEN_CONDITION_SELECTION,
+
+    // Wordlist dialogs
+    WORDLISTS_CONFIG,
+    WORDLIST_EDITOR,
 
     // Trigger condition config dialogs
     BROADCAST_RECEIVED_CONDITION,

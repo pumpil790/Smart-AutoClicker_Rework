@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/AppTheme.Widget.Card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="@dimen/margin_horizontal_default"
+    android:layout_marginVertical="@dimen/margin_vertical_small">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="@dimen/margin_horizontal_default"
+        android:paddingVertical="@dimen/margin_vertical_default">
+
+        <LinearLayout
+            android:id="@+id/wordlist_info_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/text_wordlist_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                android:maxLines="1"
+                android:ellipsize="end"/>
+
+            <TextView
+                android:id="@+id/text_wordlist_count"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"/>
+
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_edit_wordlist"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:icon="@drawable/ic_text_condition"
+            android:contentDescription="@string/content_desc_edit_wordlist"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_export_wordlist"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:icon="@drawable/ic_copy"
+            android:contentDescription="@string/content_desc_export_wordlist"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_delete_wordlist"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:icon="@drawable/ic_delete"
+            android:contentDescription="@string/content_desc_delete_wordlist"/>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

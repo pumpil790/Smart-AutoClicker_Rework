@@ -28,6 +28,7 @@ import com.buzbuz.smartautoclicker.core.domain.model.counter.Counter
 import com.buzbuz.smartautoclicker.core.domain.model.event.Event
 import com.buzbuz.smartautoclicker.core.domain.model.event.ScreenEvent
 import com.buzbuz.smartautoclicker.core.domain.model.event.TriggerEvent
+import com.buzbuz.smartautoclicker.core.domain.wordlists.IWordlistRepository
 import com.buzbuz.smartautoclicker.core.processing.data.processor.actions.ActionExecutor
 import com.buzbuz.smartautoclicker.core.processing.data.processor.state.ProcessingState
 import com.buzbuz.smartautoclicker.core.processing.data.scaling.ScalingManager
@@ -66,11 +67,14 @@ internal class ScenarioProcessor(
     private val bitmapSupplier: suspend (String, Int, Int) -> Bitmap?,
     private val onStopRequested: () -> Unit,
     private val progressListener: SmartProcessingListener?,
+    wordlistRepository: IWordlistRepository? = null,
+    private val frameTextReadCache: FrameTextReadCache = FrameTextReadCache(imageDetector),
     @get:VisibleForTesting internal val processingState: ProcessingState = ProcessingState(
         screenEvents = screenEvents,
         triggerEvents = triggerEvents,
         counters = counters,
         progressListener = progressListener,
+        wordlistRepository = wordlistRepository,
     ),
     private val conditionsVerifier: ConditionsVerifier = ConditionsVerifier(
         state = processingState,
@@ -78,6 +82,7 @@ internal class ScenarioProcessor(
         scalingManager = scalingManager,
         bitmapSupplier = bitmapSupplier,
         progressListener = progressListener,
+        frameTextReadCache = frameTextReadCache,
     ),
     private val actionExecutor: ActionExecutor = ActionExecutor(
         androidExecutor = androidExecutor,
@@ -85,6 +90,8 @@ internal class ScenarioProcessor(
         randomize = randomize,
         unblockWorkaroundEnabled = unblockWorkaroundEnabled,
         currentTimeMs = currentTimeMs,
+        frameTextReadCache = frameTextReadCache,
+        scalingManager = scalingManager,
     ),
 ) {
 
@@ -182,7 +189,8 @@ internal class ScenarioProcessor(
     }
 
     private suspend fun processScreenEvents(screenFrame: Bitmap) {
-        // Set the current screen image
+        // Set the current screen image and reset per-frame OCR cache
+        frameTextReadCache.clear()
         imageDetector.setScreenBitmap(screenFrame, processingTag)
 
         try {
@@ -212,7 +220,8 @@ internal class ScenarioProcessor(
                 yield()
             }
         } finally {
-            // We are done processing this frame, release it
+            // We are done processing this frame, clear OCR cache and release bitmap
+            frameTextReadCache.clear()
             imageDetector.releaseScreenBitmap(screenFrame)
         }
     }

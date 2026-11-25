@@ -132,6 +132,16 @@ data class ActionEntity(
     // ActionType.TEXT
     @ColumnInfo(name = "text_value") val textValue: String? = null,
     @ColumnInfo(name = "text_validate_input") val textValidateInput: Boolean? = null,
+
+    // ActionType.CAPTURE_TEXT
+    @ColumnInfo(name = "detection_area_left") val detectionAreaLeft: Int? = null,
+    @ColumnInfo(name = "detection_area_top") val detectionAreaTop: Int? = null,
+    @ColumnInfo(name = "detection_area_right") val detectionAreaRight: Int? = null,
+    @ColumnInfo(name = "detection_area_bottom") val detectionAreaBottom: Int? = null,
+    @ColumnInfo(name = "text_alphabet") val textAlphabet: String? = null,
+    @ColumnInfo(name = "capture_text_target_type") val captureTextTargetType: CaptureTargetType? = null,
+    @ColumnInfo(name = "capture_text_target_name") val captureTextTargetName: String? = null,
+    @ColumnInfo(name = "capture_deduplicate") val captureDeduplicate: Boolean? = null,
 ) : EntityWithId
 
 /**

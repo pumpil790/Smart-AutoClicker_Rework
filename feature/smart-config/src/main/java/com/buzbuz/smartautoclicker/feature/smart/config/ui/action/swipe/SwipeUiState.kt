@@ -40,3 +40,4 @@ data class SwipeUiState(
     val toMotionId: Identifier?,
     val availableConditions: List<ScreenCondition>,
 )
+

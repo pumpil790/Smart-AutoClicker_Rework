@@ -18,9 +18,12 @@
 #define KLICK_R_TEXT_MATCHER_HPP
 
 #include <opencv2/core/types.hpp>
+#include <cstdint>
 #include <map>
 #include <net.h>
 #include <limits>
+#include <string>
+#include <vector>
 
 #include "text_matching_result.hpp"
 #include "detection/text_detector.hpp"
@@ -36,6 +39,13 @@ namespace smartautoclicker {
         COMMA_DECIMAL = 2,
     };
 
+    /** Output of reading and joining all text blocks within a screen region. */
+    struct TextReadResult {
+        std::string text;
+        float confidence = 0.0f;
+        cv::Rect boundingBox;
+    };
+
     /**
      * Orchestrates the text matching process by combining text detection and recognition.
      * It locates text areas on the screen, converts them to strings using OCR, and compares
@@ -44,6 +54,11 @@ namespace smartautoclicker {
     class TextMatcher {
 
     private:
+        static constexpr float READ_TEXT_FALLBACK_CONFIDENCE = 0.75f;
+        static constexpr float DEFAULT_MIN_SIMILARITY = 0.80f;
+        static constexpr float SHORT_TARGET_MIN_SIMILARITY = 0.65f;
+        static constexpr size_t SHORT_TARGET_MAX_CODEPOINTS = 6;
+
         /** Handles the localization of text bounding boxes. */
         std::unique_ptr<TextDetector> textLocator = std::make_unique<TextDetector>();
         /** Handles the conversion of image crops to text. */
@@ -79,7 +94,20 @@ namespace smartautoclicker {
         static double stringToDouble(const std::string& text, NumberFormat format);
 
         /**
-         * Runs the text detection and recognition on a specific area of the screen.
+         * Preprocesses an RGB crop for light/colored text on colored/dark backgrounds.
+         * Inverts dark backgrounds and applies CLAHE local contrast enhancement.
+         */
+        static cv::Mat preprocessColorText(const cv::Mat& rgbCrop);
+
+        /**
+         * Runs text detection and recognition directly on an RGB crop.
+         */
+        std::vector<TextRecognizerResult> recognizeTextOnRgb(
+                const cv::Mat& rgbCrop,
+                const std::string& recognitionModelId);
+
+        /**
+         * Runs the text detection and recognition on a specific area of the screen (Pass 1).
          * @param screenImage The source screen capture.
          * @param detectionArea The region of the screen to search in.
          * @param recognitionModelId The identifier of the recognition model to use.
@@ -92,33 +120,60 @@ namespace smartautoclicker {
                 const std::string& recognitionModelId);
 
         /**
-         * Calculates the similarity between two strings.
-         * @param recognized The text recognized by the OCR.
-         * @param target The expected text.
-         * @param minSimilarity The threshold to consider a match successful.
-         *
-         * @return A value between 0.0 (no match) and 1.0 (perfect match).
+         * Sorts detected blocks into natural reading order (top-to-bottom lines, left-to-right within a line)
+         * and joins their text with single spaces.
          */
-        float similarity(const std::string& recognized, const std::string& target, float minSimilarity = 0.80f);
+        static TextReadResult joinRecognitionResults(const std::vector<TextRecognizerResult>& results);
 
         /**
-         * Finds the best substring match within the recognized text.
-         * Useful when the target text is part of a larger detected block.
-         * @param recognized The text recognized by the OCR.
-         * @param target The text to search for.
-         * @param minSimilarity The threshold for a valid match.
-         *
-         * @return The highest similarity score found.
+         * Evaluates recognition results against conditionText (individual blocks, then joined multiline text).
+         * Updates currentMatchingResult in place.
          */
-        float bestSubstringSimilarity(const std::string& recognized, const std::string& target, float minSimilarity = 0.80f);
+        void evaluateTextMatches(
+                const std::vector<TextRecognizerResult>& recognizerResults,
+                const std::vector<uint32_t>& normalizedTarget,
+                float minSimilarity,
+                const cv::Rect& detectionArea,
+                int threshold);
 
         /**
-         * Normalizes a character for comparison (e.g., case folding).
-         * @param c The character to normalize.
-         *
-         * @return The normalized character.
+         * Evaluates recognition results for numeric values.
          */
-        static char normalizeChar(char c);
+        void evaluateNumberMatches(
+                const std::vector<TextRecognizerResult>& recognizerResults,
+                const cv::Rect& detectionArea,
+                int threshold,
+                NumberFormat numberFormat);
+
+        /**
+         * Calculates the similarity between two normalized codepoint sequences.
+         */
+        float similarity(
+                const std::vector<uint32_t>& recognized,
+                const std::vector<uint32_t>& target,
+                float minSimilarity);
+
+        /**
+         * Finds the best substring match within the recognized codepoint sequence.
+         */
+        float bestSubstringSimilarity(
+                const std::vector<uint32_t>& recognized,
+                const std::vector<uint32_t>& target,
+                float minSimilarity);
+
+        /**
+         * Decodes UTF-8 into normalized Unicode codepoints (ASCII & Cyrillic case folding,
+         * ё->е, whitespace collapse, optional trailing punctuation removal).
+         */
+        static std::vector<uint32_t> decodeAndNormalizeUtf8(
+                const std::string& text,
+                bool stripTrailingPunctuation = true);
+
+        /** Normalizes a single Unicode codepoint (ASCII A-Z, Cyrillic А-Я, Ё/ё -> е). */
+        static uint32_t normalizeCodepoint(uint32_t cp);
+
+        /** Returns adaptive minimum similarity threshold based on target length in codepoints. */
+        static float getAdaptiveMinSimilarity(size_t targetCodepoints);
 
     public:
         /** Resets the matcher state for a new search. */
@@ -167,6 +222,15 @@ namespace smartautoclicker {
                 const cv::Rect& detectionArea,
                 int threshold,
                 NumberFormat numberFormat = NumberFormat::AUTO);
+
+        /**
+         * Reads and joins all text blocks detected in the specified screen region in reading order.
+         * Uses a two-pass fallback (original -> enhanced/inverted) only when Pass 1 fails or has low confidence.
+         */
+        TextReadResult readText(
+                const ScreenImage& screenImage,
+                const std::string& recognitionModelId,
+                const cv::Rect& detectionArea);
     };
 }
 

@@ -35,6 +35,7 @@ import com.buzbuz.smartautoclicker.core.display.config.DisplayConfig
 import com.buzbuz.smartautoclicker.core.display.config.DisplayConfigManager
 import com.buzbuz.smartautoclicker.core.display.recorder.DisplayRecorder
 import com.buzbuz.smartautoclicker.core.domain.model.scenario.Scenario
+import com.buzbuz.smartautoclicker.core.domain.wordlists.IWordlistRepository
 import com.buzbuz.smartautoclicker.core.processing.data.DetectorEngine
 import com.buzbuz.smartautoclicker.core.processing.data.DetectorState
 import com.buzbuz.smartautoclicker.core.processing.data.scaling.ScalingManager
@@ -246,6 +247,7 @@ class DetectorEngineDetectionOrientationTests {
             appComponentsProvider = mockAppComponentsProvider,
             debuggingListener = mockDebuggingListener,
             ocrModelsRepository = mockOcrModelsRepository,
+            wordlistRepository = mockk<IWordlistRepository>(relaxed = true),
         )
 
         var capturedListener: ((Context) -> Unit)? = null

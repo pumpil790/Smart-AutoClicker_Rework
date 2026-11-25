@@ -182,5 +182,6 @@ private class PositionResolver(
         }
         is ScreenCondition.Number -> detectionArea
         is ScreenCondition.Text -> detectionArea
+        is ScreenCondition.TextListCheck -> detectionArea
     }
 }

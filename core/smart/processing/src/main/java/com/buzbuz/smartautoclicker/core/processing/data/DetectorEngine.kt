@@ -42,6 +42,7 @@ import com.buzbuz.smartautoclicker.core.domain.model.condition.ScreenCondition
 import com.buzbuz.smartautoclicker.core.domain.model.event.ScreenEvent
 import com.buzbuz.smartautoclicker.core.domain.model.event.TriggerEvent
 import com.buzbuz.smartautoclicker.core.domain.model.scenario.Scenario
+import com.buzbuz.smartautoclicker.core.domain.wordlists.IWordlistRepository
 import com.buzbuz.smartautoclicker.core.processing.data.processor.ScenarioProcessor
 import com.buzbuz.smartautoclicker.core.processing.data.scaling.ScalingManager
 import com.buzbuz.smartautoclicker.core.processing.data.scaling.ScreenConditionScalingInfo
@@ -85,6 +86,7 @@ class DetectorEngine @Inject constructor(
     private val appComponentsProvider: AppComponentsProvider,
     private val debuggingListener: SmartProcessingListener,
     private val ocrModelsRepository: OCRModelsRepository,
+    private val wordlistRepository: IWordlistRepository,
 ) {
 
     /** Process the events conditions to detect them on the screen. */
@@ -270,6 +272,7 @@ class DetectorEngine @Inject constructor(
                 unblockWorkaroundEnabled = settingsRepository.isInputBlockWorkaroundEnabled(),
                 onStopRequested = { stopDetection() },
                 progressListener  = if (liveDebugging || generateReport) debuggingListener else null,
+                wordlistRepository = wordlistRepository,
             )
             scenarioProcessor?.onScenarioStart(context)
 

@@ -109,4 +109,9 @@ data class ConditionEntity(
     // ConditionType.ON_TEXT_DETECTED
     @ColumnInfo(name = "text_to_detect") val textToDetect: String? = null,
     @ColumnInfo(name = "text_alphabet") val textAlphabet: String? = null,
+
+    // ConditionType.ON_TEXT_LIST_CHECK
+    @ColumnInfo(name = "text_list_mode") val textListMode: TextListCompareMode? = null,
+    @ColumnInfo(name = "text_list_match_type") val textListMatchType: TextMatchType? = null,
+    @ColumnInfo(name = "text_target_name") val textTargetName: String? = null,
 ) : EntityWithId

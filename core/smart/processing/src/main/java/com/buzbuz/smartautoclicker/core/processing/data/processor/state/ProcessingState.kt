@@ -23,6 +23,7 @@ import com.buzbuz.smartautoclicker.core.domain.model.counter.Counter
 import com.buzbuz.smartautoclicker.core.domain.model.event.Event
 import com.buzbuz.smartautoclicker.core.domain.model.event.ScreenEvent
 import com.buzbuz.smartautoclicker.core.domain.model.event.TriggerEvent
+import com.buzbuz.smartautoclicker.core.domain.wordlists.IWordlistRepository
 import com.buzbuz.smartautoclicker.core.processing.domain.SmartProcessingListener
 
 internal class ProcessingState(
@@ -30,13 +31,15 @@ internal class ProcessingState(
     triggerEvents: List<TriggerEvent>,
     counters: List<Counter>,
     private val progressListener: SmartProcessingListener?,
+    wordlistRepository: IWordlistRepository? = null,
     private val eventsState: EventsState = EventsState(screenEvents, triggerEvents),
     private val broadcastsState: BroadcastsState = BroadcastsState(triggerEvents),
     private val countersState: CountersState = CountersState(counters, progressListener),
     private val timersState: TimersState = TimersState(triggerEvents),
     private val cooldownState: CooldownsState = CooldownsState(),
+    private val stringVariablesState: StringVariablesState = StringVariablesState(screenEvents, wordlistRepository),
 ) : IBroadcastsState by broadcastsState, ICountersState by countersState, ITimersState by timersState,
-    IEventsState by eventsState, ICooldownsState by cooldownState {
+    IEventsState by eventsState, ICooldownsState by cooldownState, IStringVariablesState by stringVariablesState {
 
     init {
         eventsState.setEventStateListener(object : EventStateListener {
@@ -48,11 +51,13 @@ internal class ProcessingState(
     fun onProcessingStarted(context: Context) {
         broadcastsState.onProcessingStarted(context)
         timersState.onProcessingStarted()
+        stringVariablesState.onProcessingStarted()
     }
 
     fun onProcessingStopped() {
         broadcastsState.onProcessingStopped()
         timersState.onProcessingStopped()
+        stringVariablesState.onProcessingStopped()
     }
 
     fun clearIterationState() {

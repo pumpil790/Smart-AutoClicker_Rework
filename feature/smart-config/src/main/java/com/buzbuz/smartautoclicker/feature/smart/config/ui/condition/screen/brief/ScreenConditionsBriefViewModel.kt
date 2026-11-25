@@ -106,6 +106,8 @@ class ScreenConditionsBriefViewModel @Inject constructor(
                 condition.toTextItemDescription(context)
             is ScreenCondition.Text ->
                 condition.toTextItemDescription()
+            is ScreenCondition.TextListCheck ->
+                condition.toTextItemDescription()
             null -> null
         }
     }
@@ -198,6 +200,13 @@ class ScreenConditionsBriefViewModel @Inject constructor(
         }
     }
 
+    fun createTextListCheckCondition(context: Context, completed: (ScreenCondition.TextListCheck) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val condition = editionRepository.editedItemsBuilder.createNewTextListCheckCondition(context)
+            withContext(Dispatchers.Main) { completed(condition) }
+        }
+    }
+
     fun createNumberCondition(context: Context, completed: (ScreenCondition.Number) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val condition = editionRepository.editedItemsBuilder.createNewNumberCondition(context)
@@ -260,6 +269,12 @@ private fun ScreenCondition.Image.toImageItemDescription(screenArea: Point, bitm
 private fun ScreenCondition.Text.toTextItemDescription(): TextConditionDescription =
     TextConditionDescription(
         conditionText = text,
+        conditionDetectionArea = detectionArea,
+    )
+
+private fun ScreenCondition.TextListCheck.toTextItemDescription(): TextConditionDescription =
+    TextConditionDescription(
+        conditionText = targetName,
         conditionDetectionArea = detectionArea,
     )
 

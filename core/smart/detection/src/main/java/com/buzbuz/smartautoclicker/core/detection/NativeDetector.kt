@@ -193,6 +193,42 @@ class NativeDetector private constructor() : ImageDetector {
         }
     }
 
+    override fun readText(recognitionModelId: String, detectionArea: Rect): TextReadResult {
+        if (isClosed) return TextReadResult()
+
+        return try {
+            val metrics = DoubleArray(5)
+            val text = readTextNative(
+                recognitionModelId = recognitionModelId,
+                x = detectionArea.left,
+                y = detectionArea.top,
+                width = detectionArea.width(),
+                height = detectionArea.height(),
+                outMetrics = metrics,
+            ) ?: ""
+
+            TextReadResult(
+                text = text,
+                confidence = metrics[0],
+                boundingBox = Rect(
+                    metrics[1].toInt(),
+                    metrics[2].toInt(),
+                    metrics[3].toInt(),
+                    metrics[4].toInt(),
+                ),
+            )
+        } catch (ex: Exception) {
+            ex.throwWithKeys(
+                keys = mapOf(
+                    "screenSize" to "${screenDimensions.x}x${screenDimensions.y}",
+                    "recognitionModelId" to recognitionModelId,
+                    "detectionArea" to detectionArea.toString(),
+                ),
+            )
+            TextReadResult()
+        }
+    }
+
     override fun releaseScreenBitmap(screenBitmap: Bitmap) {
         if (isClosed) return
         releaseScreenImage(screenBitmap)
@@ -308,6 +344,15 @@ class NativeDetector private constructor() : ImageDetector {
         threshold: Int,
         numberFormat: Int,
     ): DoubleArray?
+
+    private external fun readTextNative(
+        recognitionModelId: String,
+        x: Int,
+        y: Int,
+        width: Int,
+        height: Int,
+        outMetrics: DoubleArray,
+    ): String?
 
     /** Native method for releasing the screen image resources set with [setScreenImage]. */
     private external fun releaseScreenImage(screenBitmap: Bitmap)

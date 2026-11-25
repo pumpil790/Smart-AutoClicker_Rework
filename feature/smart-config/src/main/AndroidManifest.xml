@@ -40,6 +40,13 @@
             android:excludeFromRecents="true"
             android:exported="false"/>
 
+        <activity
+            android:name=".ui.wordlists.WordlistFileActivity"
+            android:theme="@style/AppTheme.TranslucentActivity"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:exported="false"/>
+
     </application>
 
 </manifest>

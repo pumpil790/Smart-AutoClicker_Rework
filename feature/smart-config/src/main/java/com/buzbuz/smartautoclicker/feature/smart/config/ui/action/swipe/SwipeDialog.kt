@@ -370,3 +370,4 @@ class SwipeDialog(
 }
 
 private const val TAG = "SwipeDialog"
+

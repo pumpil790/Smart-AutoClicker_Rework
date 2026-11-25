@@ -18,6 +18,7 @@ package com.buzbuz.smartautoclicker.feature.smart.config.ui.action.selection
 
 import com.buzbuz.smartautoclicker.core.common.overlays.dialog.implementation.DialogChoice
 import com.buzbuz.smartautoclicker.feature.smart.config.R
+import com.buzbuz.smartautoclicker.feature.smart.config.ui.common.uistate.action.getCaptureTextIconRes
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.common.uistate.action.getChangeCounterIconRes
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.common.uistate.action.getClickIconRes
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.common.uistate.action.getIntentIconRes
@@ -110,5 +111,12 @@ sealed class ActionTypeChoice(
         R.string.item_set_text_title,
         R.string.item_set_text_desc,
         getSetTextIconRes(),
+    )
+
+    /** Capture Text Action choice. */
+    data object CaptureText : ActionTypeChoice(
+        R.string.item_capture_text_title,
+        R.string.item_capture_text_desc,
+        getCaptureTextIconRes(),
     )
 }

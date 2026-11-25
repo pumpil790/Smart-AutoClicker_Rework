@@ -92,7 +92,7 @@ abstract class ConditionDao {
     abstract suspend fun getConditionName(conditionId: Long): String?
 
     /** @return the flow on the count of screen conditions. */
-    @Query("SELECT COUNT(*) FROM $CONDITION_TABLE WHERE type IN ('ON_IMAGE_DETECTED', 'ON_COLOR_DETECTED', 'ON_NUMBER_DETECTED', 'ON_TEXT_DETECTED')")
+    @Query("SELECT COUNT(*) FROM $CONDITION_TABLE WHERE type IN ('ON_IMAGE_DETECTED', 'ON_COLOR_DETECTED', 'ON_NUMBER_DETECTED', 'ON_TEXT_DETECTED', 'ON_TEXT_LIST_CHECK')")
     abstract fun getScreenConditionsCount(): Flow<Int>
 
     /** @return the flow on the count of trigger conditions. */

@@ -1,8 +1,11 @@
 package com.buzbuz.smartautoclicker.core.domain.model.action.mapper
 
 import android.content.ComponentName
+import android.graphics.Rect
+import com.buzbuz.smartautoclicker.code.smart.detectionmodels.text.domain.OCRAlphabet
 import com.buzbuz.smartautoclicker.core.base.identifier.Identifier
 import com.buzbuz.smartautoclicker.core.database.entity.ActionType
+import com.buzbuz.smartautoclicker.core.database.entity.CaptureTargetType
 import com.buzbuz.smartautoclicker.core.database.entity.ChangeCounterOperationType
 import com.buzbuz.smartautoclicker.core.database.entity.CompleteActionEntity
 import com.buzbuz.smartautoclicker.core.database.entity.CoordinatesType
@@ -12,6 +15,7 @@ import com.buzbuz.smartautoclicker.core.database.entity.GestureFingerMotionType
 import com.buzbuz.smartautoclicker.core.database.entity.SystemActionType
 import com.buzbuz.smartautoclicker.core.domain.model.counter.CounterOperationValue
 import com.buzbuz.smartautoclicker.core.domain.model.action.Action
+import com.buzbuz.smartautoclicker.core.domain.model.action.CaptureText
 import com.buzbuz.smartautoclicker.core.domain.model.action.ChangeCounter
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
 import com.buzbuz.smartautoclicker.core.domain.model.action.Gesture
@@ -39,6 +43,7 @@ internal fun CompleteActionEntity.toDomain(cleanIds: Boolean = false): Action = 
     ActionType.NOTIFICATION -> toDomainNotification(cleanIds)
     ActionType.SYSTEM -> toDomainSystem(cleanIds)
     ActionType.TEXT -> toDomainSetText(cleanIds)
+    ActionType.CAPTURE_TEXT -> toDomainCaptureText(cleanIds)
 }
 
 /**
@@ -162,6 +167,30 @@ private fun CompleteActionEntity.toDomainSetText(cleanIds: Boolean = false) = Se
     priority = action.priority,
     text = action.textValue ?: "",
     validateInput = action.textValidateInput ?: false,
+)
+
+private fun CompleteActionEntity.toDomainCaptureText(cleanIds: Boolean = false) = CaptureText(
+    id = Identifier(id = action.id, asTemporary = cleanIds),
+    eventId = Identifier(id = action.eventId, asTemporary = cleanIds),
+    name = action.name,
+    priority = action.priority,
+    detectionArea = Rect(
+        action.detectionAreaLeft ?: 0,
+        action.detectionAreaTop ?: 0,
+        action.detectionAreaRight ?: 0,
+        action.detectionAreaBottom ?: 0,
+    ),
+    alphabet = action.textAlphabet?.let {
+        try {
+            OCRAlphabet.valueOf(it)
+        } catch (_: IllegalArgumentException) { OCRAlphabet.LATIN }
+    } ?: OCRAlphabet.LATIN,
+    targetType = when (action.captureTextTargetType) {
+        CaptureTargetType.FILE_LIST -> CaptureText.TargetType.FILE_LIST
+        CaptureTargetType.STRING_VAR, null -> CaptureText.TargetType.STRING_VAR
+    },
+    targetName = action.captureTextTargetName ?: "",
+    deduplicate = action.captureDeduplicate ?: true,
 )
 
 private fun EventToggleType.toDomain(): ToggleEvent.ToggleType =

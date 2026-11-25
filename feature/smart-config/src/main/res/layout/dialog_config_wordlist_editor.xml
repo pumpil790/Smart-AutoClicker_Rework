@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/AppTheme.Dialog.BackgroundLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <include layout="@layout/include_dialog_navigation_top_bar"
+        android:id="@+id/layout_top_bar" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/margin_horizontal_default"
+            android:layout_marginVertical="@dimen/margin_vertical_large"
+            android:orientation="vertical">
+
+            <include layout="@layout/include_field_text_input"
+                android:id="@+id/field_wordlist_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/margin_vertical_default"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="@dimen/margin_vertical_default">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_import_txt"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="@dimen/margin_horizontal_small"
+                    android:text="@string/button_title_import_txt"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_export_txt"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="@dimen/margin_horizontal_small"
+                    android:text="@string/button_title_export_txt"/>
+
+            </LinearLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/layout_wordlist_entries"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/field_wordlist_entries_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edit_wordlist_entries"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minLines="10"
+                    android:gravity="top|start"
+                    android:inputType="textMultiLine|textNoSuggestions"
+                    android:scrollbars="vertical"/>
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

@@ -70,6 +70,7 @@ class ActionTypeSelectionDialog(
             ActionTypeChoice.Notification,
             ActionTypeChoice.Pause,
             ActionTypeChoice.SetText,
+            ActionTypeChoice.CaptureText,
             ActionTypeChoice.Swipe,
             ActionTypeChoice.Gesture,
             ActionTypeChoice.System -> Unit

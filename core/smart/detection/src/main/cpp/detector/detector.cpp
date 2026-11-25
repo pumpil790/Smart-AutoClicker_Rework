@@ -101,3 +101,7 @@ TextMatchingResult* Detector::detectText(const char* textCondition, const char* 
 TextMatchingResult* Detector::detectNumber(const cv::Rect& roi, int threshold, NumberFormat numberFormat) {
     return textMatcher->matchNumber(*screenImage, roi, threshold, numberFormat);
 }
+
+TextReadResult Detector::readText(const char* recognitionModelId, const cv::Rect& roi) {
+    return textMatcher->readText(*screenImage, std::string(recognitionModelId), roi);
+}

@@ -53,6 +53,8 @@ enum class ActionType {
     SYSTEM,
     /** Set the text of a focused view on the screen. */
     TEXT,
+    /** Capture text from a screen region into a string variable or a wordlist file. */
+    CAPTURE_TEXT,
 }
 
 
@@ -100,8 +102,34 @@ enum class ConditionType {
     ON_NUMBER_DETECTED,
     /** Condition fulfilled upon text detected. */
     ON_TEXT_DETECTED,
+    /** Condition fulfilled upon screen text matching a wordlist file or string variable. */
+    ON_TEXT_LIST_CHECK,
     /** Toggle the enabled state of an event. */
     ON_TIMER_REACHED,
+}
+
+/** Comparison source for [ConditionType.ON_TEXT_LIST_CHECK]. */
+enum class TextListCompareMode {
+    /** Match screen text against lines in a `.txt` wordlist file. */
+    IN_FILE_LIST,
+    /** Match screen text against a runtime string variable. */
+    EQUALS_STRING_VAR,
+}
+
+/** Text matching strategy for [ConditionType.ON_TEXT_LIST_CHECK]. */
+enum class TextMatchType {
+    /** Exact equality after UTF-8 normalization (lowercase, ё->е, whitespace collapse, edge punctuation stripped). */
+    EXACT_NORMALIZED,
+    /** Fuzzy similarity / substring match using codepoint Damerau-Levenshtein distance and threshold. */
+    FUZZY_SUBSTRING,
+}
+
+/** Target destination for [ActionType.CAPTURE_TEXT]. */
+enum class CaptureTargetType {
+    /** Store captured text in an in-memory runtime string variable. */
+    STRING_VAR,
+    /** Append captured text as a new line to a `.txt` wordlist file. */
+    FILE_LIST,
 }
 
 

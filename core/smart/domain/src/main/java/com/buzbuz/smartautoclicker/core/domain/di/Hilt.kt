@@ -22,6 +22,8 @@ import com.buzbuz.smartautoclicker.core.bitmaps.BitmapRepository
 import com.buzbuz.smartautoclicker.core.domain.IRepository
 import com.buzbuz.smartautoclicker.core.domain.Repository
 import com.buzbuz.smartautoclicker.core.domain.data.ScenarioDataSource
+import com.buzbuz.smartautoclicker.core.domain.wordlists.IWordlistRepository
+import com.buzbuz.smartautoclicker.core.domain.wordlists.WordlistRepository
 
 import dagger.Module
 import dagger.Provides
@@ -42,4 +44,10 @@ object RepositoryHiltModule {
         dataSource: ScenarioDataSource,
         bitmapManager: BitmapRepository,
     ): IRepository = Repository(ioDispatcher, dataSource, bitmapManager)
+
+    @Provides
+    @Singleton
+    internal fun providesWordlistRepository(
+        impl: WordlistRepository,
+    ): IWordlistRepository = impl
 }

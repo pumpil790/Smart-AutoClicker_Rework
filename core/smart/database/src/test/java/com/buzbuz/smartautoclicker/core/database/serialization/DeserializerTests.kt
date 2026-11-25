@@ -88,4 +88,78 @@ class DeserializerTests {
         // Then
         assertEquals(DEFAULT_COMPLETE_SCENARIO, deserializedScenario)
     }
+
+    @Test
+    fun deserialization_v25Compat_importsCleanly() {
+        val jsonScenario = DEFAULT_COMPLETE_SCENARIO.encodeToJsonObject()
+
+        val deserializedScenario = DeserializerFactory.create(25)
+            ?.deserializeCompleteScenario(jsonScenario)
+
+        assertNotNull(deserializedScenario)
+        assertEquals(DEFAULT_COMPLETE_SCENARIO.scenario.name, deserializedScenario!!.scenario.name)
+        assertEquals(1, deserializedScenario.events.size)
+        assertNull(deserializedScenario.events[0].conditions[0].textListMode)
+        assertNull(deserializedScenario.events[0].actions[0].action.captureTextTargetType)
+    }
+
+    @Test
+    fun deserialization_v26_textListAndCaptureText_roundTrip() {
+        val scenario = CompleteScenario(
+            scenario = ScenarioEntity(1, "Wardrobe", 1200, 0.0, false),
+            events = listOf(
+                CompleteEventEntity(
+                    event = EventEntity(1, 1, "Check Wardrobe", 1, 0, true, EventType.IMAGE_EVENT),
+                    conditions = listOf(
+                        ConditionEntity(
+                            id = 10,
+                            eventId = 1,
+                            name = "In list",
+                            type = ConditionType.ON_TEXT_LIST_CHECK,
+                            priority = 0,
+                            shouldBeDetected = true,
+                            threshold = 80,
+                            detectionAreaLeft = 100,
+                            detectionAreaTop = 200,
+                            detectionAreaRight = 500,
+                            detectionAreaBottom = 300,
+                            textAlphabet = "CYRILLIC",
+                            textListMode = TextListCompareMode.IN_FILE_LIST,
+                            textListMatchType = TextMatchType.FUZZY_SUBSTRING,
+                            textTargetName = "wardrobe",
+                        )
+                    ),
+                    actions = listOf(
+                        CompleteActionEntity(
+                            action = ActionEntity(
+                                id = 20,
+                                eventId = 1,
+                                priority = 0,
+                                name = "Capture item",
+                                type = ActionType.CAPTURE_TEXT,
+                                detectionAreaLeft = 100,
+                                detectionAreaTop = 200,
+                                detectionAreaRight = 500,
+                                detectionAreaBottom = 300,
+                                textAlphabet = "CYRILLIC",
+                                captureTextTargetType = CaptureTargetType.FILE_LIST,
+                                captureTextTargetName = "wardrobe",
+                                captureDeduplicate = true,
+                            ),
+                            gestureFingers = emptyList(),
+                            intentExtras = emptyList(),
+                            eventsToggle = emptyList(),
+                        )
+                    ),
+                )
+            ),
+            counters = emptyList(),
+        )
+
+        val jsonScenario = scenario.encodeToJsonObject()
+        val deserialized = DeserializerFactory.create(DATABASE_VERSION)
+            ?.deserializeCompleteScenario(jsonScenario)
+
+        assertEquals(scenario, deserialized)
+    }
 }

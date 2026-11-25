@@ -21,6 +21,7 @@ import androidx.lifecycle.viewModelScope
 
 import com.buzbuz.smartautoclicker.code.smart.detectionmodels.text.OCRModelsRepository
 import com.buzbuz.smartautoclicker.code.smart.detectionmodels.text.domain.OCRAlphabet
+import com.buzbuz.smartautoclicker.core.domain.model.action.CaptureText
 import com.buzbuz.smartautoclicker.core.domain.model.condition.ScreenCondition
 import com.buzbuz.smartautoclicker.feature.smart.config.R
 import com.buzbuz.smartautoclicker.feature.smart.config.domain.EditionRepository
@@ -46,20 +47,29 @@ class AlphabetSelectionViewModel @Inject constructor (
     private val ocrModelsRepository: OCRModelsRepository,
 ) : ViewModel() {
 
-    /** The condition being configured by the user. */
-    private val selectedAlphabet: Flow<OCRAlphabet> = editionRepository.editionState.editedScreenConditionState
-        .mapNotNull { it.value }
-        .filterIsInstance<ScreenCondition.Text>()
-        .map { textCondition -> textCondition.alphabet }
+    /** The condition or CaptureText action being configured by the user. */
+    private val selectedAlphabet: Flow<OCRAlphabet> = combine(
+        editionRepository.editionState.editedScreenConditionState,
+        editionRepository.editionState.editedActionState,
+    ) { conditionState, actionState ->
+        when (val condition = conditionState.value) {
+            is ScreenCondition.Text -> condition.alphabet
+            is ScreenCondition.TextListCheck -> condition.alphabet
+            else -> (actionState.value as? CaptureText)?.alphabet
+        }
+    }.mapNotNull { it }
 
     private val alphabetItems: Flow<List<AlphabetSelectionItem.Alphabet>> = ocrModelsRepository.recognitionModels
         .combine(selectedAlphabet) { models, selected ->
             models.map { model -> model.toUiState(selected == model.alphabet) }
         }
 
-    /** Tells if the user is currently editing a condition. If that's not the case, dialog should be closed. */
+    /** Tells if the user is currently editing a condition or action. If not, dialog should be closed. */
     @OptIn(FlowPreview::class)
-    val isEditingCondition: Flow<Boolean> = editionRepository.isEditingCondition
+    val isEditingCondition: Flow<Boolean> = combine(
+        editionRepository.isEditingCondition,
+        editionRepository.isEditingAction,
+    ) { editingCond, editingAction -> editingCond || editingAction }
         .distinctUntilChanged()
         .debounce(1000)
 
@@ -73,9 +83,15 @@ class AlphabetSelectionViewModel @Inject constructor (
 
     fun selectModel(alphabet: OCRAlphabet) {
         editionRepository.editionState.getEditedCondition<ScreenCondition.Text>()?.let { condition ->
-            editionRepository.updateEditedCondition(
-                condition.copy(alphabet = alphabet)
-            )
+            editionRepository.updateEditedCondition(condition.copy(alphabet = alphabet))
+            return
+        }
+        editionRepository.editionState.getEditedCondition<ScreenCondition.TextListCheck>()?.let { condition ->
+            editionRepository.updateEditedCondition(condition.copy(alphabet = alphabet))
+            return
+        }
+        editionRepository.editionState.getEditedAction<CaptureText>()?.let { action ->
+            editionRepository.updateEditedAction(action.copy(alphabet = alphabet))
         }
     }
 

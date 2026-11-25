@@ -118,6 +118,20 @@ interface ImageDetector : AutoCloseable {
         numberFormatType: NumberFormatType = NumberFormatType.AUTO,
     ): DetectionResult
 
+    /**
+     * Read and join all text blocks visible in the provided area in reading order.
+     * [setScreenBitmap] must have been called first with the content of the screen.
+     *
+     * @param recognitionModelId the identifier of the model to use, as specified during [loadTextDetectionModels] call.
+     * @param detectionArea the area to read text from.
+     *
+     * @return the recognized text, confidence and union bounding box.
+     */
+    fun readText(
+        recognitionModelId: String,
+        detectionArea: Rect,
+    ): TextReadResult = TextReadResult()
+
     /** Release the resources of the screen image set with [setScreenBitmap]. */
     fun releaseScreenBitmap(screenBitmap: Bitmap)
 }

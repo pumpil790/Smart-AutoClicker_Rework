@@ -25,6 +25,7 @@ import androidx.lifecycle.viewModelScope
 import com.buzbuz.smartautoclicker.core.domain.model.AND
 import com.buzbuz.smartautoclicker.core.domain.model.OR
 import com.buzbuz.smartautoclicker.core.domain.model.action.Action
+import com.buzbuz.smartautoclicker.core.domain.model.action.CaptureText
 import com.buzbuz.smartautoclicker.core.domain.model.action.ChangeCounter
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
 import com.buzbuz.smartautoclicker.core.domain.model.action.Gesture
@@ -135,6 +136,7 @@ private fun Action.getDebugIcon(): Int =
         is Notification -> R.drawable.ic_action_notification
         is Pause -> R.drawable.ic_wait
         is SetText -> R.drawable.ic_action_set_text
+        is CaptureText -> R.drawable.ic_text_condition
         is Gesture -> R.drawable.ic_gesture
         is SystemAction -> R.drawable.ic_action_system
         is ToggleEvent -> R.drawable.ic_toggle_event

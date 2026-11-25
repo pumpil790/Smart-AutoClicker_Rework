@@ -42,7 +42,8 @@ internal fun Condition.getIconRes(): Int =
         is ScreenCondition.Color -> R.drawable.ic_color_condition
         is ScreenCondition.Image -> R.drawable.ic_image_condition
         is ScreenCondition.Number -> R.drawable.ic_number_condition
-        is ScreenCondition.Text -> R.drawable.ic_text_condition
+        is ScreenCondition.Text,
+        is ScreenCondition.TextListCheck -> R.drawable.ic_text_condition
         is TriggerCondition.OnBroadcastReceived -> R.drawable.ic_broadcast_received
         is TriggerCondition.OnCounterCountReached -> R.drawable.ic_counter_reached
         is TriggerCondition.OnTimerReached -> R.drawable.ic_timer_reached

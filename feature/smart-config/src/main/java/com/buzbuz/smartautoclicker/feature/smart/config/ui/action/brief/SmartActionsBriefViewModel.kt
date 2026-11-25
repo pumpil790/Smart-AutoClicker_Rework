@@ -150,7 +150,11 @@ class SmartActionsBriefViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private val actionTypeChoices: StateFlow<List<ActionTypeChoice>> =
-        isActionCopyAvailableUseCase().map { canCopy ->
+        combine(
+            isActionCopyAvailableUseCase(),
+            editionRepository.editionState.editedEventState,
+        ) { canCopy, eventState ->
+            val isScreenEvent = eventState.value is com.buzbuz.smartautoclicker.core.domain.model.event.ScreenEvent
             buildList {
                 if (canCopy) add(ActionTypeChoice.Copy)
                 add(ActionTypeChoice.Click)
@@ -158,6 +162,7 @@ class SmartActionsBriefViewModel @Inject constructor(
                 add(ActionTypeChoice.Gesture)
                 add(ActionTypeChoice.Pause)
                 add(ActionTypeChoice.SetText)
+                if (isScreenEvent) add(ActionTypeChoice.CaptureText)
                 add(ActionTypeChoice.System)
                 add(ActionTypeChoice.ChangeCounter)
                 add(ActionTypeChoice.ToggleEvent)
@@ -410,7 +415,8 @@ class SmartActionsBriefViewModel @Inject constructor(
                     is ScreenCondition.Color -> context.createColorIndicatorDrawable(condition.color)?.toBitmap()
                     is ScreenCondition.Image -> bitmapRepository.getConditionBitmap(condition)
                     is ScreenCondition.Number -> ContextCompat.getDrawable(context, R.drawable.ic_number_condition)?.toBitmap()
-                    is ScreenCondition.Text -> ContextCompat.getDrawable(context, R.drawable.ic_text_condition)?.toBitmap()
+                    is ScreenCondition.Text,
+                    is ScreenCondition.TextListCheck -> ContextCompat.getDrawable(context, R.drawable.ic_text_condition)?.toBitmap()
                 }
             }
     }

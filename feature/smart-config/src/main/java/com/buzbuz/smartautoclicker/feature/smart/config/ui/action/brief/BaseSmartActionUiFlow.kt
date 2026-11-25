@@ -20,6 +20,7 @@ import android.content.Context
 import com.buzbuz.smartautoclicker.core.common.overlays.base.BaseOverlay
 import com.buzbuz.smartautoclicker.core.common.permissions.model.PermissionPostNotification
 import com.buzbuz.smartautoclicker.core.domain.model.action.Action
+import com.buzbuz.smartautoclicker.core.domain.model.action.CaptureText
 import com.buzbuz.smartautoclicker.core.domain.model.action.ChangeCounter
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
 import com.buzbuz.smartautoclicker.core.domain.model.action.Gesture
@@ -31,6 +32,7 @@ import com.buzbuz.smartautoclicker.core.domain.model.action.SystemAction
 import com.buzbuz.smartautoclicker.core.domain.model.action.ToggleEvent
 import com.buzbuz.smartautoclicker.feature.smart.config.domain.EditionRepository
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.action.OnActionConfigCompleteListener
+import com.buzbuz.smartautoclicker.feature.smart.config.ui.action.capturetext.CaptureTextDialog
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.action.changecounter.ChangeCounterDialog
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.action.click.ClickDialog
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.action.gesture.GestureDialog
@@ -67,6 +69,7 @@ internal fun EditionRepository.createNewAction(context: Context, choice: ActionT
     ActionTypeChoice.Notification -> editedItemsBuilder.createNewNotification(context)
     ActionTypeChoice.System -> editedItemsBuilder.createNewSystemAction(context)
     ActionTypeChoice.SetText -> editedItemsBuilder.createNewSetText(context)
+    ActionTypeChoice.CaptureText -> editedItemsBuilder.createNewCaptureText(context)
     ActionTypeChoice.Copy -> throw IllegalArgumentException("Unsupported action type for creation $choice")
 }
 
@@ -121,6 +124,7 @@ internal fun BaseOverlay.showActionConfigDialog(configurator: ActionConfigurator
         is ToggleEvent -> ToggleEventDialog(actionConfigDialogListener)
         is ChangeCounter -> ChangeCounterDialog(actionConfigDialogListener)
         is SetText -> SetTextDialog(actionConfigDialogListener)
+        is CaptureText -> CaptureTextDialog(actionConfigDialogListener)
         is Notification -> {
             if (PermissionPostNotification().checkIfGranted(context)) NotificationDialog(actionConfigDialogListener)
             else newNotificationPermissionStarterOverlay(context)

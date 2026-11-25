@@ -483,6 +483,7 @@ private fun ProcessedConditionResult.Screen.getDetectionArea(): Rect? {
 
         is ScreenCondition.Image,
         is ScreenCondition.Text,
+        is ScreenCondition.TextListCheck,
         is ScreenCondition.Number ->
             Size(size.x / 2,  size.y / 2)
     }

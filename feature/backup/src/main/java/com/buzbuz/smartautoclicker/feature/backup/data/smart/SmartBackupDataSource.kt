@@ -20,13 +20,17 @@ import android.graphics.Point
 import android.util.Log
 
 import com.buzbuz.smartautoclicker.core.database.DATABASE_VERSION
+import com.buzbuz.smartautoclicker.core.database.entity.ActionType
+import com.buzbuz.smartautoclicker.core.database.entity.CaptureTargetType
 import com.buzbuz.smartautoclicker.core.database.entity.CompleteScenario
 import com.buzbuz.smartautoclicker.core.database.entity.ConditionEntity
 import com.buzbuz.smartautoclicker.core.database.entity.ConditionType
 import com.buzbuz.smartautoclicker.core.database.entity.EventType
+import com.buzbuz.smartautoclicker.core.database.entity.TextListCompareMode
 import com.buzbuz.smartautoclicker.feature.backup.data.base.CONDITION_BACKUP_MATCH_REGEX
 import com.buzbuz.smartautoclicker.feature.backup.data.base.LEGACY_CONDITION_BACKUP_MATCH_REGEX
 import com.buzbuz.smartautoclicker.feature.backup.data.base.SMART_SCENARIO_BACKUP_MATCH_REGEX
+import com.buzbuz.smartautoclicker.feature.backup.data.base.WORDLIST_BACKUP_MATCH_REGEX
 import com.buzbuz.smartautoclicker.feature.backup.data.base.ScenarioBackupDataSource
 import com.buzbuz.smartautoclicker.feature.backup.data.base.ScenarioBackupSerializer
 import com.buzbuz.smartautoclicker.feature.backup.data.base.backupFolderName
@@ -44,6 +48,8 @@ internal class SmartBackupDataSource(
     private val conditionUnzipMatchRegex = CONDITION_BACKUP_MATCH_REGEX.toRegex()
     /** Regex matching a legacy condition file (raw pixels) into its folder in a backup archive. */
     private val legacyConditionUnzipMatchRegex = LEGACY_CONDITION_BACKUP_MATCH_REGEX.toRegex()
+    /** Regex matching a wordlist .txt file into its folder in a backup archive. */
+    private val wordlistUnzipMatchRegex = WORDLIST_BACKUP_MATCH_REGEX.toRegex()
 
     var screenCompatWarning = false
         private set
@@ -54,7 +60,9 @@ internal class SmartBackupDataSource(
         fileName.matches(scenarioUnzipMatchRegex)
 
     override fun isScenarioBackupAdditionalFileZipEntry(fileName: String): Boolean =
-        fileName.matches(conditionUnzipMatchRegex) || fileName.matches(legacyConditionUnzipMatchRegex)
+        fileName.matches(conditionUnzipMatchRegex) ||
+                fileName.matches(legacyConditionUnzipMatchRegex) ||
+                fileName.matches(wordlistUnzipMatchRegex)
 
     override fun getBackupAdditionalFilesPaths(scenario: CompleteScenario): Set<String> =
         buildSet {
@@ -62,10 +70,30 @@ internal class SmartBackupDataSource(
                 if (completeEvent.event.type == EventType.IMAGE_EVENT) {
                     completeEvent.conditions.forEach { condition ->
                         if (condition.type == ConditionType.ON_IMAGE_DETECTED) add(condition.path!!)
+                        if (condition.type == ConditionType.ON_TEXT_LIST_CHECK &&
+                            condition.textListMode == TextListCompareMode.IN_FILE_LIST
+                        ) {
+                            condition.textTargetName?.toWordlistRelativePathIfPresent()?.let(::add)
+                        }
+                    }
+                }
+                completeEvent.actions.forEach { completeAction ->
+                    val action = completeAction.action
+                    if (action.type == ActionType.CAPTURE_TEXT &&
+                        action.captureTextTargetType == CaptureTargetType.FILE_LIST
+                    ) {
+                        action.captureTextTargetName?.toWordlistRelativePathIfPresent()?.let(::add)
                     }
                 }
             }
         }
+
+    private fun String.toWordlistRelativePathIfPresent(): String? {
+        val cleanName = trim().removeSuffix(".txt").trim()
+        if (cleanName.isEmpty() || cleanName.contains('/') || cleanName.contains('\\')) return null
+        val relativePath = "wordlists/$cleanName.txt"
+        return if (File(appDataDir, relativePath).exists()) relativePath else null
+    }
 
     override fun getBackupZipFolderName(scenario: CompleteScenario): String =
         scenario.backupFolderName()
@@ -141,7 +169,8 @@ internal class SmartBackupDataSource(
             ConditionType.ON_COLOR_DETECTED,
             ConditionType.ON_IMAGE_DETECTED,
             ConditionType.ON_NUMBER_DETECTED,
-            ConditionType.ON_TEXT_DETECTED -> true
+            ConditionType.ON_TEXT_DETECTED,
+            ConditionType.ON_TEXT_LIST_CHECK -> true
 
             ConditionType.ON_COUNTER_REACHED,
             ConditionType.ON_BROADCAST_RECEIVED,
@@ -157,7 +186,8 @@ internal class SmartBackupDataSource(
             ConditionType.ON_COLOR_DETECTED,
             ConditionType.ON_IMAGE_DETECTED,
             ConditionType.ON_NUMBER_DETECTED,
-            ConditionType.ON_TEXT_DETECTED -> false
+            ConditionType.ON_TEXT_DETECTED,
+            ConditionType.ON_TEXT_LIST_CHECK -> false
         }
 }
 

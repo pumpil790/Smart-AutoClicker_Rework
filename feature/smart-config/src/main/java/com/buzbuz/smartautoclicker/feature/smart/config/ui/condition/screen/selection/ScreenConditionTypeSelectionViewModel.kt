@@ -44,6 +44,7 @@ class ScreenConditionTypeSelectionViewModel @Inject constructor(
         monitoredViewsManager.detach(MonitoredViewType.SCREEN_CONDITION_TYPE_SELECTION_IMAGE)
         monitoredViewsManager.detach(MonitoredViewType.SCREEN_CONDITION_TYPE_SELECTION_NUMBER)
         monitoredViewsManager.detach(MonitoredViewType.SCREEN_CONDITION_TYPE_SELECTION_TEXT)
+        monitoredViewsManager.detach(MonitoredViewType.SCREEN_CONDITION_TYPE_SELECTION_TEXT_LIST)
     }
 
     private fun ScreenConditionTypeChoice.getMonitoredViewType() : MonitoredViewType =
@@ -52,5 +53,6 @@ class ScreenConditionTypeSelectionViewModel @Inject constructor(
             ScreenConditionTypeChoice.OnImageDetected-> MonitoredViewType.SCREEN_CONDITION_TYPE_SELECTION_IMAGE
             ScreenConditionTypeChoice.OnNumberDetected -> MonitoredViewType.SCREEN_CONDITION_TYPE_SELECTION_NUMBER
             ScreenConditionTypeChoice.OnTextDetected -> MonitoredViewType.SCREEN_CONDITION_TYPE_SELECTION_TEXT
+            ScreenConditionTypeChoice.OnTextListCheck -> MonitoredViewType.SCREEN_CONDITION_TYPE_SELECTION_TEXT_LIST
         }
 }

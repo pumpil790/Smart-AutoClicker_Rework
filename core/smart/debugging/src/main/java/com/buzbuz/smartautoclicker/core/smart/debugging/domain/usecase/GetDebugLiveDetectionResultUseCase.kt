@@ -17,6 +17,7 @@
 package com.buzbuz.smartautoclicker.core.smart.debugging.domain.usecase
 
 import com.buzbuz.smartautoclicker.core.domain.model.action.Action
+import com.buzbuz.smartautoclicker.core.domain.model.action.CaptureText
 import com.buzbuz.smartautoclicker.core.domain.model.action.ChangeCounter
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
 import com.buzbuz.smartautoclicker.core.domain.model.action.Gesture
@@ -83,6 +84,7 @@ class GetDebugLiveDetectionResultUseCase @Inject constructor(
                 is Gesture -> action.getDurationMs()
                 is Pause -> action.pauseDuration ?: 0
                 is ChangeCounter,
+                is CaptureText,
                 is Intent,
                 is Notification,
                 is SetText,

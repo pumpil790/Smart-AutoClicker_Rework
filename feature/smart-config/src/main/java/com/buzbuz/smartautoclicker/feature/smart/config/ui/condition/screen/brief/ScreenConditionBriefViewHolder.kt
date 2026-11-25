@@ -100,7 +100,8 @@ class ScreenConditionBriefViewHolder(
                     icon.setImageResource(R.drawable.ic_number_condition)
                 }
 
-                is ScreenCondition.Text -> {
+                is ScreenCondition.Text,
+                is ScreenCondition.TextListCheck -> {
                     icon.setIconTintColor(
                         MaterialColors.getColor(
                             ContextThemeWrapper(

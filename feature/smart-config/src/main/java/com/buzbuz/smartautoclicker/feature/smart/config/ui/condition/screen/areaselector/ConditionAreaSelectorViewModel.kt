@@ -22,10 +22,12 @@ import androidx.lifecycle.ViewModel
 import com.buzbuz.smartautoclicker.core.display.config.DisplayConfigManager
 
 import com.buzbuz.smartautoclicker.core.domain.model.IN_AREA
+import com.buzbuz.smartautoclicker.core.domain.model.action.CaptureText
 import com.buzbuz.smartautoclicker.core.domain.model.condition.ScreenCondition
 import com.buzbuz.smartautoclicker.feature.smart.config.domain.EditionRepository
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.mapNotNull
 
 import javax.inject.Inject
@@ -35,14 +37,29 @@ class ConditionAreaSelectorViewModel @Inject constructor(
     private val displayConfigManager: DisplayConfigManager,
 ) : ViewModel() {
 
-
-    /** The condition being configured by the user. */
-    private val configuredCondition = editionRepository.editionState.editedScreenConditionState
-        .mapNotNull { it.value }
-
     /** The position at which the selector should be initialized. */
-    val initialArea: Flow<SelectorUiState> = configuredCondition
-        .mapNotNull { condition -> condition.toSelectorUiState() }
+    val initialArea: Flow<SelectorUiState> = combine(
+        editionRepository.editionState.editedScreenConditionState,
+        editionRepository.editionState.editedActionState,
+    ) { conditionState, actionState ->
+        conditionState.value?.toSelectorUiState()
+            ?: (actionState.value as? CaptureText)?.toSelectorUiState()
+    }.mapNotNull { it }
+
+    private fun CaptureText.toSelectorUiState(): SelectorUiState {
+        val screenSize = displayConfigManager.displayConfig.sizePx
+        return SelectorUiState(
+            initialArea =
+                if (!detectionArea.isEmpty) detectionArea
+                else Rect(
+                    (screenSize.x / 2) - 64,
+                    (screenSize.y / 2) - 64,
+                    (screenSize.x / 2) + 64,
+                    (screenSize.y / 2) + 64,
+                ),
+            minimalArea = Rect(0, 0, MIN_TEXT_DETECTION_WIDTH, MIN_TEXT_DETECTION_HEIGHT),
+        )
+    }
 
     private fun ScreenCondition.toSelectorUiState(): SelectorUiState? =
         when (this) {
@@ -75,6 +92,21 @@ class ConditionAreaSelectorViewModel @Inject constructor(
             }
 
             is ScreenCondition.Text -> {
+                val screenSize = displayConfigManager.displayConfig.sizePx
+                SelectorUiState(
+                    initialArea =
+                        if (!detectionArea.isEmpty) detectionArea
+                        else Rect(
+                            (screenSize.x / 2) - 64,
+                            (screenSize.y / 2) - 64,
+                            (screenSize.x / 2) + 64,
+                            (screenSize.y / 2) + 64,
+                        ),
+                    minimalArea = Rect(0, 0, MIN_TEXT_DETECTION_WIDTH, MIN_TEXT_DETECTION_HEIGHT),
+                )
+            }
+
+            is ScreenCondition.TextListCheck -> {
                 val screenSize = displayConfigManager.displayConfig.sizePx
                 SelectorUiState(
                     initialArea =

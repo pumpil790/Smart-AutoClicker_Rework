@@ -39,6 +39,7 @@ import com.buzbuz.smartautoclicker.feature.smart.config.databinding.ContentMoreB
 import com.buzbuz.smartautoclicker.feature.smart.config.di.ScenarioConfigViewModelsEntryPoint
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.counter.config.CountersConfigDialog
 import com.buzbuz.smartautoclicker.feature.smart.config.ui.scenario.more.debugview.DebugViewSettingsDialog
+import com.buzbuz.smartautoclicker.feature.smart.config.ui.wordlists.WordlistsConfigDialog
 
 import kotlinx.coroutines.launch
 
@@ -85,8 +86,12 @@ class MoreContent(appContext: Context) : NavBarDialogContent(appContext) {
 
             fieldCounters.apply {
                 setTitle(context.getString(R.string.field_counters_title))
-                setOnClickListener(viewModel::toggleIsDebugReportEnabled)
                 setOnClickListener { debounceUserInteraction { showCountersConfigDialog() } }
+            }
+
+            fieldWordlists.apply {
+                setTitle(context.getString(R.string.field_wordlists_title))
+                setOnClickListener { debounceUserInteraction { showWordlistsConfigDialog() } }
             }
         }
 
@@ -100,6 +105,7 @@ class MoreContent(appContext: Context) : NavBarDialogContent(appContext) {
                 launch { viewModel.isDebugReportEnabled.collect(viewBinding.fieldDebugReport::setChecked) }
                 launch { viewModel.showDebugReportEnabled.collect(::updateDebugReportAvailability) }
                 launch { viewModel.counterFieldDescription.collect(::updateCountersDesc) }
+                launch { viewModel.wordlistsFieldDescription.collect(::updateWordlistsDesc) }
             }
         }
     }
@@ -110,6 +116,10 @@ class MoreContent(appContext: Context) : NavBarDialogContent(appContext) {
 
     private fun updateCountersDesc(desc: String) {
         viewBinding.fieldCounters.setDescription(desc)
+    }
+
+    private fun updateWordlistsDesc(desc: String) {
+        viewBinding.fieldWordlists.setDescription(desc)
     }
 
     private fun updateDebugReportAvailability(isAvailable: Boolean) {
@@ -134,6 +144,13 @@ class MoreContent(appContext: Context) : NavBarDialogContent(appContext) {
         dialogController.overlayManager.navigateTo(
             context = context,
             newOverlay = CountersConfigDialog(),
+        )
+    }
+
+    private fun showWordlistsConfigDialog() {
+        dialogController.overlayManager.navigateTo(
+            context = context,
+            newOverlay = WordlistsConfigDialog(),
         )
     }
 }

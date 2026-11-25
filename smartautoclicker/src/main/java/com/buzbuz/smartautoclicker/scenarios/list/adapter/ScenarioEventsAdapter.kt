@@ -119,6 +119,13 @@ class EventCardViewHolder(
 
                     conditionText.text = condition.text
                 }
+
+                is ScreenCondition.TextListCheck -> {
+                    conditionImage.visibility = View.GONE
+                    conditionText.visibility = View.VISIBLE
+
+                    conditionText.text = condition.targetName
+                }
             }
         }
     }

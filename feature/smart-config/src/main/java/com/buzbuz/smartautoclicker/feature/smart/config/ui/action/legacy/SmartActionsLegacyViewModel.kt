@@ -58,18 +58,21 @@ class SmartActionsLegacyViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     // The legacy dialog exposes copy through its own button, not through the type selection
-    override fun getActionTypeChoices(): List<ActionTypeChoice> = listOf(
-        ActionTypeChoice.Click,
-        ActionTypeChoice.Swipe,
-        ActionTypeChoice.Gesture,
-        ActionTypeChoice.Pause,
-        ActionTypeChoice.SetText,
-        ActionTypeChoice.System,
-        ActionTypeChoice.ChangeCounter,
-        ActionTypeChoice.ToggleEvent,
-        ActionTypeChoice.Notification,
-        ActionTypeChoice.Intent,
-    )
+    override fun getActionTypeChoices(): List<ActionTypeChoice> = buildList {
+        add(ActionTypeChoice.Click)
+        add(ActionTypeChoice.Swipe)
+        add(ActionTypeChoice.Gesture)
+        add(ActionTypeChoice.Pause)
+        add(ActionTypeChoice.SetText)
+        if (editionRepository.editionState.getEditedEvent() is com.buzbuz.smartautoclicker.core.domain.model.event.ScreenEvent) {
+            add(ActionTypeChoice.CaptureText)
+        }
+        add(ActionTypeChoice.System)
+        add(ActionTypeChoice.ChangeCounter)
+        add(ActionTypeChoice.ToggleEvent)
+        add(ActionTypeChoice.Notification)
+        add(ActionTypeChoice.Intent)
+    }
 
     override fun createAction(context: Context, choice: ActionTypeChoice): Action =
         editionRepository.createNewAction(context, choice)

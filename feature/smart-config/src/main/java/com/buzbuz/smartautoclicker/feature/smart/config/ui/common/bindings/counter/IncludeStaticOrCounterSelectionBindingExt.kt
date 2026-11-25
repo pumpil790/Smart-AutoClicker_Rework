@@ -226,5 +226,6 @@ private fun ScreenCondition.getTypeIconRes(): Int =
         is ScreenCondition.Color -> R.drawable.ic_color_condition
         is ScreenCondition.Image -> R.drawable.ic_image_condition
         is ScreenCondition.Number -> R.drawable.ic_number_condition
-        is ScreenCondition.Text -> R.drawable.ic_text_condition
+        is ScreenCondition.Text,
+        is ScreenCondition.TextListCheck -> R.drawable.ic_text_condition
     }

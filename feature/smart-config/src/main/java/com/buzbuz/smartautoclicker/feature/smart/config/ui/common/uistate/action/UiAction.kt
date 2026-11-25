@@ -20,6 +20,7 @@ import android.content.Context
 import androidx.annotation.DrawableRes
 import com.buzbuz.smartautoclicker.core.common.overlays.menu.implementation.brief.ItemBrief
 import com.buzbuz.smartautoclicker.core.domain.model.action.Action
+import com.buzbuz.smartautoclicker.core.domain.model.action.CaptureText
 import com.buzbuz.smartautoclicker.core.domain.model.action.ChangeCounter
 import com.buzbuz.smartautoclicker.core.domain.model.action.Click
 import com.buzbuz.smartautoclicker.core.domain.model.action.Gesture
@@ -66,6 +67,7 @@ internal fun Action.getIconRes(): Int = when (this) {
     is Notification -> getNotificationIconRes()
     is SystemAction -> getSystemActionIconRes()
     is SetText -> getSetTextIconRes()
+    is CaptureText -> getCaptureTextIconRes()
 }
 
 internal fun Action.getActionDescription(context: Context, parent: Event?, inError: Boolean): String = when (this) {
@@ -80,4 +82,5 @@ internal fun Action.getActionDescription(context: Context, parent: Event?, inErr
     is Notification -> getDescription(context, inError)
     is SystemAction -> getDescription(context, inError)
     is SetText -> getDescription(context, inError)
+    is CaptureText -> getDescription(context, inError)
 }

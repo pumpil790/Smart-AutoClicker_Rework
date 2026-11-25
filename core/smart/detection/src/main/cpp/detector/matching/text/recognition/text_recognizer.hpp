@@ -55,6 +55,9 @@ namespace smartautoclicker {
                 const std::string& recognitionModelId,
                 const std::vector<TextDetectorResult>& detectionResults);
 
+        /** Merges overlapping tiled window outputs into a single line of text. */
+        static std::string mergeWindowTexts(const std::vector<std::string>& windowTexts);
+
     private:
 
         /** PP-OCR normalization mean values. */
@@ -81,6 +84,15 @@ namespace smartautoclicker {
         std::vector<std::string> tokens;
 
         /**
+         * Runs single-window inference on a pre-normalized 320x48 NCNN input and decodes it.
+         */
+        bool runSingleInference(
+                AlphabetRecognizer& recognizer,
+                const ncnn::Mat& input,
+                const cv::Rect& boundingBox,
+                TextRecognizerResult& outResult);
+
+        /**
          * Preprocesses a single image crop for the recognition model.
          * Handles resizing and normalization.
          * @param crop The RGB image crop containing text.
@@ -88,6 +100,11 @@ namespace smartautoclicker {
          * @return An NCNN Mat ready for input.
          */
         ncnn::Mat preprocess(const cv::Mat& crop, bool isRtlAlphabet);
+
+        /**
+         * Preprocesses an already-resized 320x48 RGB tile into an NCNN input Mat.
+         */
+        ncnn::Mat preprocessFixedTile(const cv::Mat& tile);
 
         /**
          * Decodes the raw output tensor from the recognizer into a string.

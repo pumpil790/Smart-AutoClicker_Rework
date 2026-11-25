@@ -27,7 +27,12 @@ internal interface IStringVariablesState {
     fun getStringVariable(name: String): String?
     fun setStringVariable(name: String, value: String)
     fun getWordlistEntries(listName: String): List<String>
-    fun appendToWordlist(listName: String, value: String, deduplicate: Boolean): Boolean
+    fun appendToWordlist(
+        listName: String,
+        value: String,
+        deduplicate: Boolean,
+        foldCyrillicHomoglyphs: Boolean = false,
+    ): Boolean
 }
 
 internal class StringVariablesState(
@@ -90,21 +95,29 @@ internal class StringVariablesState(
         }
     }
 
-    override fun appendToWordlist(listName: String, value: String, deduplicate: Boolean): Boolean {
+    override fun appendToWordlist(
+        listName: String,
+        value: String,
+        deduplicate: Boolean,
+        foldCyrillicHomoglyphs: Boolean,
+    ): Boolean {
         val key = normalizeKey(listName)
         val cleaned = value.replace('\r', ' ').replace('\n', ' ').trim()
-        val normalized = TextMatchingUtils.normalize(cleaned)
+        val normalized = TextMatchingUtils.normalize(cleaned, foldCyrillicHomoglyphs = foldCyrillicHomoglyphs)
         if (key.isEmpty() || cleaned.isEmpty() || normalized.isEmpty()) return false
 
         val entries = wordlistCache.getOrPut(key) {
             wordlistRepository?.readEntries(key)?.toMutableList() ?: mutableListOf()
         }
 
-        if (deduplicate && entries.any { TextMatchingUtils.normalize(it) == normalized }) {
+        if (deduplicate && entries.any {
+                TextMatchingUtils.normalize(it, foldCyrillicHomoglyphs = foldCyrillicHomoglyphs) == normalized
+            }
+        ) {
             return false
         }
 
-        val written = wordlistRepository?.appendEntry(key, cleaned, deduplicate) ?: true
+        val written = wordlistRepository?.appendEntry(key, cleaned, deduplicate, foldCyrillicHomoglyphs) ?: true
         if (written) {
             entries.add(cleaned)
         }

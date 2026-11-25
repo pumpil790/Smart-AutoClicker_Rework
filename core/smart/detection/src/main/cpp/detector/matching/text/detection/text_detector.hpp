@@ -74,9 +74,9 @@ namespace smartautoclicker {
                 1.f / 127.5f
         };
 
-        cv::Mat kernelClose  = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 9));
+        cv::Mat kernelClose  = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 3));
         cv::Mat kernelDilate = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(40, 3));
-        cv::Mat kernelVertical = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(1, 11));
+        cv::Mat kernelVertical = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(1, 3));
 
         /** NCNN text detector.*/
         std::unique_ptr<ncnn::Net> ncnnDetector = std::make_unique<ncnn::Net>();

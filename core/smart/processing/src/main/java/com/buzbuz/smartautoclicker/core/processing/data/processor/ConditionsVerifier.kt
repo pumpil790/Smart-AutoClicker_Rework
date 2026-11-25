@@ -19,6 +19,7 @@ package com.buzbuz.smartautoclicker.core.processing.data.processor
 import android.graphics.Bitmap
 import android.graphics.Point
 
+import com.buzbuz.smartautoclicker.code.smart.detectionmodels.text.domain.OCRAlphabet
 import com.buzbuz.smartautoclicker.core.detection.ImageDetector
 import com.buzbuz.smartautoclicker.core.detection.NumberFormatType as DetectionNumberFormatType
 import com.buzbuz.smartautoclicker.core.domain.model.condition.NumberFormatType as DomainNumberFormatType
@@ -288,6 +289,8 @@ internal class ConditionsVerifier(
             scaledArea = conditionScalingInfo.detectionArea,
         )
 
+        val foldCyrillicHomoglyphs = condition.alphabet == OCRAlphabet.CYRILLIC
+
         val (isMatched, scorePercent) = when (condition.compareMode) {
             TextListCompareMode.EQUALS_STRING_VAR -> {
                 val targetValue = state.getStringVariable(condition.targetName)
@@ -299,6 +302,7 @@ internal class ConditionsVerifier(
                         targetText = targetValue,
                         matchType = condition.matchType,
                         thresholdPercent = condition.threshold,
+                        foldCyrillicHomoglyphs = foldCyrillicHomoglyphs,
                     )
                 }
             }
@@ -310,6 +314,7 @@ internal class ConditionsVerifier(
                     entries = entries,
                     matchType = condition.matchType,
                     thresholdPercent = condition.threshold,
+                    foldCyrillicHomoglyphs = foldCyrillicHomoglyphs,
                 )
             }
         }

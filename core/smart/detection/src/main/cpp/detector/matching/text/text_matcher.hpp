@@ -133,6 +133,7 @@ namespace smartautoclicker {
                 const std::vector<TextRecognizerResult>& recognizerResults,
                 const std::vector<uint32_t>& normalizedTarget,
                 float minSimilarity,
+                bool foldCyrillicHomoglyphs,
                 const cv::Rect& detectionArea,
                 int threshold);
 
@@ -163,14 +164,15 @@ namespace smartautoclicker {
 
         /**
          * Decodes UTF-8 into normalized Unicode codepoints (ASCII & Cyrillic case folding,
-         * ё->е, whitespace collapse, optional trailing punctuation removal).
+         * ё->е, whitespace collapse, optional trailing punctuation removal, optional Cyrillic homoglyph folding).
          */
         static std::vector<uint32_t> decodeAndNormalizeUtf8(
                 const std::string& text,
-                bool stripTrailingPunctuation = true);
+                bool stripTrailingPunctuation = true,
+                bool foldCyrillicHomoglyphs = false);
 
-        /** Normalizes a single Unicode codepoint (ASCII A-Z, Cyrillic А-Я, Ё/ё -> е). */
-        static uint32_t normalizeCodepoint(uint32_t cp);
+        /** Normalizes a single Unicode codepoint (ASCII A-Z, Cyrillic А-Я, Ё/ё -> е, optional Cyrillic homoglyphs). */
+        static uint32_t normalizeCodepoint(uint32_t cp, bool foldCyrillicHomoglyphs = false);
 
         /** Returns adaptive minimum similarity threshold based on target length in codepoints. */
         static float getAdaptiveMinSimilarity(size_t targetCodepoints);

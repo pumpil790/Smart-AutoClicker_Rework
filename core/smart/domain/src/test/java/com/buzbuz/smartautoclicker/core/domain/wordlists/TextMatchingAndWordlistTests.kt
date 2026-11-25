@@ -155,4 +155,69 @@ class TextMatchingAndWordlistTests {
             wordlistRepository.readEntries("wardrobe_copy"),
         )
     }
+
+    @Test
+    fun homoglyphFolding_cyrillicEnabled_matchesExactFuzzyAndDeduplicates() {
+        val (exactMatched, exactScore) = TextMatchingUtils.matchText(
+            recognizedText = "Королевcкоe одеяниe",
+            targetText = "Королевское одеяние",
+            matchType = TextMatchType.EXACT_NORMALIZED,
+            thresholdPercent = 100,
+            foldCyrillicHomoglyphs = true,
+        )
+        assertTrue(exactMatched)
+        assertEquals(100.0, exactScore, 0.01)
+
+        val (fuzzyMatched, fuzzyScore) = TextMatchingUtils.matchText(
+            recognizedText = "Королевcкую одеяниe",
+            targetText = "Королевское одеяние",
+            matchType = TextMatchType.FUZZY_SUBSTRING,
+            thresholdPercent = 80,
+            foldCyrillicHomoglyphs = true,
+        )
+        assertTrue("Expected homoglyph + Russian case variant to match at >=80%, got $fuzzyScore%", fuzzyMatched)
+        assertTrue(fuzzyScore >= 80.0)
+
+        val (safetyMatched, safetyScore) = TextMatchingUtils.matchText(
+            recognizedText = "бe3опаcHOсTи.",
+            targetText = "безопасности",
+            matchType = TextMatchType.EXACT_NORMALIZED,
+            thresholdPercent = 100,
+            foldCyrillicHomoglyphs = true,
+        )
+        assertTrue(safetyMatched)
+        assertEquals(100.0, safetyScore, 0.01)
+
+        // Pure numeric tokens must not be corrupted by 3->з / 6->б
+        assertEquals("18", TextMatchingUtils.normalize("18", foldCyrillicHomoglyphs = true))
+        assertEquals("577", TextMatchingUtils.normalize("577", foldCyrillicHomoglyphs = true))
+        assertEquals("наряд 3", TextMatchingUtils.normalize("Наряд 3", foldCyrillicHomoglyphs = true))
+        assertEquals("глава 6", TextMatchingUtils.normalize("Глава 6", foldCyrillicHomoglyphs = true))
+
+        // Wordlist deduplication with foldCyrillicHomoglyphs = true skips homoglyph duplicates
+        wordlistRepository.saveEntries("wardrobe", listOf("Королевское одеяние"))
+        assertFalse(
+            wordlistRepository.appendEntry(
+                listName = "wardrobe",
+                rawEntry = "Королевcкоe одеяниe",
+                deduplicate = true,
+                foldCyrillicHomoglyphs = true,
+            )
+        )
+        assertEquals(1, wordlistRepository.readEntries("wardrobe").size)
+    }
+
+    @Test
+    fun homoglyphFolding_disabled_preservesV2Behavior() {
+        assertEquals("abcehkmoptxy", TextMatchingUtils.normalize("ABCEHKMOPTXY", foldCyrillicHomoglyphs = false))
+
+        val (matched, _) = TextMatchingUtils.matchText(
+            recognizedText = "Королевcкоe одеяниe",
+            targetText = "Королевское одеяние",
+            matchType = TextMatchType.EXACT_NORMALIZED,
+            thresholdPercent = 100,
+            foldCyrillicHomoglyphs = false,
+        )
+        assertFalse(matched)
+    }
 }

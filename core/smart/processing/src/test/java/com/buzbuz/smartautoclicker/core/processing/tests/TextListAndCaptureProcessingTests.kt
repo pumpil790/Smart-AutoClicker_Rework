@@ -339,4 +339,117 @@ class TextListAndCaptureProcessingTests {
 
         processor.onScenarioEnd()
     }
+
+    @Test
+    fun cyrillicHomoglyphs_matchedInTextListCheckAndDeduplicatedOnCapture() = runTest {
+        wordlistRepository.saveEntries("wardrobe", listOf("Королевское одеяние"))
+
+        val evCheckId = Identifier(databaseId = 10L)
+        val evCaptureId = Identifier(databaseId = 20L)
+        val scenarioId = Identifier(databaseId = 200L)
+
+        val checkEvent = ScreenEvent(
+            id = evCheckId,
+            scenarioId = scenarioId,
+            name = "Check owned",
+            conditionOperator = AND,
+            priority = 0,
+            enabledOnStart = true,
+            keepDetecting = true,
+            cooldownMs = 0L,
+            conditions = listOf(
+                ScreenCondition.TextListCheck(
+                    id = Identifier(databaseId = 11L),
+                    eventId = evCheckId,
+                    name = "In wardrobe exact",
+                    threshold = 100,
+                    shouldBeDetected = true,
+                    priority = 0,
+                    detectionArea = titleArea,
+                    alphabet = OCRAlphabet.CYRILLIC,
+                    compareMode = TextListCompareMode.IN_FILE_LIST,
+                    matchType = TextMatchType.EXACT_NORMALIZED,
+                    targetName = "wardrobe",
+                )
+            ),
+            actions = listOf(
+                ChangeCounter(
+                    id = Identifier(databaseId = 101L),
+                    eventId = evCheckId,
+                    name = "Matched +1",
+                    priority = 0,
+                    counterName = "hits",
+                    operation = ChangeCounter.OperationType.ADD,
+                    operationValue = CounterOperationValue.Number(1.0),
+                )
+            ),
+        )
+
+        val captureEvent = ScreenEvent(
+            id = evCaptureId,
+            scenarioId = scenarioId,
+            name = "Always try capture",
+            conditionOperator = AND,
+            priority = 1,
+            enabledOnStart = true,
+            keepDetecting = false,
+            cooldownMs = 0L,
+            conditions = listOf(
+                ScreenCondition.Image(
+                    id = Identifier(databaseId = 21L),
+                    eventId = evCaptureId,
+                    name = "Arrow",
+                    threshold = 4,
+                    shouldBeDetected = true,
+                    priority = 0,
+                    path = "arrow.png",
+                    area = arrowArea,
+                    detectionType = EXACT,
+                )
+            ),
+            actions = listOf(
+                CaptureText(
+                    id = Identifier(databaseId = 201L),
+                    eventId = evCaptureId,
+                    name = "Learn with dedup",
+                    detectionArea = titleArea,
+                    alphabet = OCRAlphabet.CYRILLIC,
+                    targetType = CaptureText.TargetType.FILE_LIST,
+                    targetName = "wardrobe",
+                    deduplicate = true,
+                )
+            ),
+        )
+
+        val screenEvents = listOf(checkEvent, captureEvent)
+        scalingManager.startScaling(quality = 10000.0, screenEvents = screenEvents)
+
+        val processor = ScenarioProcessor(
+            processingTag = "test_homoglyphs",
+            imageDetector = mockImageDetector,
+            scalingManager = scalingManager,
+            randomize = false,
+            screenEvents = screenEvents,
+            triggerEvents = emptyList(),
+            counters = listOf(Counter(counterName = "hits", defaultValue = 0.0, scenarioId = scenarioId)),
+            androidExecutor = mockAndroidExecutor,
+            bitmapSupplier = { _, _, _ -> mockArrowBitmap },
+            onStopRequested = {},
+            progressListener = null,
+            wordlistRepository = wordlistRepository,
+        )
+
+        processor.onScenarioStart(context)
+
+        // OCR returns Latin homoglyphs 'c' and 'e' inside Cyrillic phrase
+        every { mockImageDetector.readText("CYRILLIC", any()) } returns
+            TextReadResult("Королевcкоe одеяниe", 0.90, titleArea)
+        processor.process(mockScreenBitmap)
+
+        // Both EXACT_NORMALIZED match AND capture deduplication fold Cyrillic homoglyphs
+        assertEquals(1.0, processor.processingState.getCounterValue("hits")!!, 0.001)
+        assertEquals(listOf("Королевское одеяние"), wordlistRepository.readEntries("wardrobe"))
+
+        processor.onScenarioEnd()
+    }
 }

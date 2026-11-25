@@ -19,6 +19,14 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '21'
+      - name: Native C++ OCR unit tests
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Werror \
+            core/smart/detection/src/main/cpp/detector/matching/text/text_matching_core.cpp \
+            core/smart/detection/src/main/cpp/detector/matching/text/recognition/text_tiling_utils.cpp \
+            core/smart/detection/src/test/cpp/text_ocr_v3_tests.cpp \
+            -o /tmp/text_ocr_v3_tests
+          /tmp/text_ocr_v3_tests
       - name: Local unit tests with Gradle
         run: ./gradlew testFDroidDebugUnitTest
         env:

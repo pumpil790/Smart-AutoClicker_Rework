@@ -37,11 +37,16 @@ object TextMatchingUtils {
      * - Replaces 'ё' -> 'е'
      * - Collapses consecutive whitespace into single spaces and trims
      * - Optionally strips leading/trailing punctuation
+     * - Optionally folds unambiguous Latin/digit lookalikes into Cyrillic (for CYRILLIC OCR)
      */
-    fun normalize(text: String, stripEdgePunctuation: Boolean = true): String {
+    fun normalize(
+        text: String,
+        stripEdgePunctuation: Boolean = true,
+        foldCyrillicHomoglyphs: Boolean = false,
+    ): String {
         if (text.isEmpty()) return ""
 
-        val sb = StringBuilder(text.length)
+        val cps = ArrayList<Int>(text.length)
         var prevWasSpace = true
         var i = 0
         while (i < text.length) {
@@ -51,28 +56,38 @@ object TextMatchingUtils {
 
             if (Character.isWhitespace(cp) || cp == 0x00A0) {
                 if (!prevWasSpace) {
-                    sb.append(' ')
+                    cps.add(' '.code)
                     prevWasSpace = true
                 }
             } else {
-                val normalizedCp = normalizeCodepoint(cp)
-                sb.appendCodePoint(normalizedCp)
+                cps.add(normalizeCodepoint(cp, foldCyrillicHomoglyphs))
                 prevWasSpace = false
             }
         }
 
-        // Trim trailing space
-        var end = sb.length
-        while (end > 0 && sb[end - 1] == ' ') end--
+        // Trim spaces
+        var end = cps.size
+        while (end > 0 && cps[end - 1] == ' '.code) end--
         var start = 0
-        while (start < end && sb[start] == ' ') start++
+        while (start < end && cps[start] == ' '.code) start++
 
         if (stripEdgePunctuation) {
-            while (start < end && (sb[start] in EDGE_PUNCTUATION || sb[start] == ' ')) start++
-            while (end > start && (sb[end - 1] in EDGE_PUNCTUATION || sb[end - 1] == ' ')) end--
+            while (start < end && (isEdgePunctuation(cps[start]) || cps[start] == ' '.code)) start++
+            while (end > start && (isEdgePunctuation(cps[end - 1]) || cps[end - 1] == ' '.code)) end--
         }
 
-        return if (start >= end) "" else sb.substring(start, end)
+        if (start >= end) return ""
+
+        val trimmed = IntArray(end - start) { idx -> cps[start + idx] }
+        if (foldCyrillicHomoglyphs) {
+            foldCyrillicDigitHomoglyphs(trimmed)
+        }
+
+        val sb = StringBuilder(trimmed.size)
+        for (cp in trimmed) {
+            sb.appendCodePoint(cp)
+        }
+        return sb.toString()
     }
 
     /**
@@ -84,9 +99,10 @@ object TextMatchingUtils {
         targetText: String,
         matchType: TextMatchType,
         thresholdPercent: Int,
+        foldCyrillicHomoglyphs: Boolean = false,
     ): Pair<Boolean, Double> {
-        val normRecognized = normalize(recognizedText)
-        val normTarget = normalize(targetText)
+        val normRecognized = normalize(recognizedText, foldCyrillicHomoglyphs = foldCyrillicHomoglyphs)
+        val normTarget = normalize(targetText, foldCyrillicHomoglyphs = foldCyrillicHomoglyphs)
         if (normRecognized.isEmpty() || normTarget.isEmpty()) return false to 0.0
 
         return when (matchType) {
@@ -114,13 +130,16 @@ object TextMatchingUtils {
         entries: Collection<String>,
         matchType: TextMatchType,
         thresholdPercent: Int,
+        foldCyrillicHomoglyphs: Boolean = false,
     ): Pair<Boolean, Double> {
-        val normRecognized = normalize(recognizedText)
+        val normRecognized = normalize(recognizedText, foldCyrillicHomoglyphs = foldCyrillicHomoglyphs)
         if (normRecognized.isEmpty() || entries.isEmpty()) return false to 0.0
 
         if (matchType == TextMatchType.EXACT_NORMALIZED) {
             for (entry in entries) {
-                if (normalize(entry) == normRecognized) return true to 100.0
+                if (normalize(entry, foldCyrillicHomoglyphs = foldCyrillicHomoglyphs) == normRecognized) {
+                    return true to 100.0
+                }
             }
             return false to 0.0
         }
@@ -131,7 +150,7 @@ object TextMatchingUtils {
         var bestScorePercent = 0.0
 
         for (entry in entries) {
-            val normEntry = normalize(entry)
+            val normEntry = normalize(entry, foldCyrillicHomoglyphs = foldCyrillicHomoglyphs)
             if (normEntry.isEmpty()) continue
             if (normRecognized == normEntry) return true to 100.0
 
@@ -262,7 +281,67 @@ object TextMatchingUtils {
         return result
     }
 
-    private fun normalizeCodepoint(cp: Int): Int {
+    private fun isEdgePunctuation(cp: Int): Boolean =
+        cp <= 0xFFFF && cp.toChar() in EDGE_PUNCTUATION
+
+    private fun isCyrillicCodepoint(cp: Int): Boolean =
+        cp in 0x0400..0x04FF
+
+    private fun isTokenAlnumCodepoint(cp: Int): Boolean =
+        (cp in '0'.code..'9'.code) ||
+            (cp in 'a'.code..'z'.code) ||
+            (cp in 'A'.code..'Z'.code) ||
+            isCyrillicCodepoint(cp)
+
+    private fun foldCyrillicDigitHomoglyphs(codepoints: IntArray) {
+        val n = codepoints.size
+        var i = 0
+        while (i < n) {
+            if (!isTokenAlnumCodepoint(codepoints[i])) {
+                i++
+                continue
+            }
+
+            val start = i
+            var hasCyrillic = false
+            while (i < n && isTokenAlnumCodepoint(codepoints[i])) {
+                if (isCyrillicCodepoint(codepoints[i])) {
+                    hasCyrillic = true
+                }
+                i++
+            }
+
+            if (hasCyrillic) {
+                for (k in start until i) {
+                    when (codepoints[k]) {
+                        0x0033 -> codepoints[k] = 0x0437 // '3' -> 'з'
+                        0x0036 -> codepoints[k] = 0x0431 // '6' -> 'б'
+                    }
+                }
+            }
+        }
+    }
+
+    private fun normalizeCodepoint(cp: Int, foldCyrillicHomoglyphs: Boolean = false): Int {
+        if (foldCyrillicHomoglyphs) {
+            // Uppercase-only Latin homoglyphs (checked BEFORE ASCII A-Z -> a-z)
+            when (cp) {
+                0x0042 -> return 0x0432 // B -> в
+                0x0048 -> return 0x043D // H -> н
+                0x004D -> return 0x043C // M -> м
+                0x0054 -> return 0x0442 // T -> т
+                // Both-case unambiguous Latin homoglyphs
+                0x0041, 0x0061 -> return 0x0430 // A/a -> а
+                0x0043, 0x0063 -> return 0x0441 // C/c -> с
+                0x0045, 0x0065 -> return 0x0435 // E/e -> е
+                0x004B, 0x006B -> return 0x043A // K/k -> к
+                0x004F, 0x006F -> return 0x043E // O/o -> о
+                0x0050, 0x0070 -> return 0x0440 // P/p -> р
+                0x0058, 0x0078 -> return 0x0445 // X/x -> х
+                0x0059, 0x0079 -> return 0x0443 // Y/y -> у
+            }
+        }
+
         if (cp in 0x0041..0x005A) return cp + 0x20
         if (cp in 0x0410..0x042F) return cp + 0x20
         if (cp == 0x0401 || cp == 0x0451) return 0x0435

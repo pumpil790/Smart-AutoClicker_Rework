@@ -44,7 +44,12 @@ interface IWordlistRepository {
     fun getWordlistRelativePath(listName: String): String
     fun readEntries(listName: String): List<String>
     fun saveEntries(listName: String, entries: List<String>)
-    fun appendEntry(listName: String, rawEntry: String, deduplicate: Boolean): Boolean
+    fun appendEntry(
+        listName: String,
+        rawEntry: String,
+        deduplicate: Boolean,
+        foldCyrillicHomoglyphs: Boolean = false,
+    ): Boolean
     fun deleteWordlist(listName: String): Boolean
     fun importFromStream(listName: String, input: InputStream, merge: Boolean = false): Int
     fun exportToStream(listName: String, output: OutputStream)
@@ -112,10 +117,15 @@ class WordlistRepository @Inject constructor(
         }
     }
 
-    override fun appendEntry(listName: String, rawEntry: String, deduplicate: Boolean): Boolean = synchronized(lock) {
+    override fun appendEntry(
+        listName: String,
+        rawEntry: String,
+        deduplicate: Boolean,
+        foldCyrillicHomoglyphs: Boolean,
+    ): Boolean = synchronized(lock) {
         val safeName = sanitizeName(listName)
         val cleaned = rawEntry.replace('\r', ' ').replace('\n', ' ').trim()
-        val normalizedNew = TextMatchingUtils.normalize(cleaned)
+        val normalizedNew = TextMatchingUtils.normalize(cleaned, foldCyrillicHomoglyphs = foldCyrillicHomoglyphs)
         if (safeName.isEmpty() || cleaned.isEmpty() || normalizedNew.isEmpty()) return false
 
         ensureDirExistsLocked()
@@ -126,7 +136,10 @@ class WordlistRepository @Inject constructor(
             emptyList()
         }
 
-        if (deduplicate && existing.any { TextMatchingUtils.normalize(it) == normalizedNew }) {
+        if (deduplicate && existing.any {
+                TextMatchingUtils.normalize(it, foldCyrillicHomoglyphs = foldCyrillicHomoglyphs) == normalizedNew
+            }
+        ) {
             return false
         }
 

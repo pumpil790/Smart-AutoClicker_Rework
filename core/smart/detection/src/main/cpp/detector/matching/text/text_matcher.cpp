@@ -24,20 +24,13 @@
 #include <numeric>
 
 #include "text_matcher.hpp"
+#include "text_matching_core.hpp"
 #include "../../../logs/log.h"
 #include "../../../utils/roi.h"
 
 using namespace smartautoclicker;
 
 namespace {
-
-    bool isWhitespaceCodepoint(uint32_t cp) {
-        return cp == ' ' || cp == '\t' || cp == '\n' || cp == '\r' || cp == 0x00A0;
-    }
-
-    bool isTrailingPunctuation(uint32_t cp) {
-        return cp == '.' || cp == ',' || cp == '!' || cp == '?';
-    }
 
     std::string collapseAndTrimSpaces(const std::string& input) {
         std::string out;
@@ -58,13 +51,6 @@ namespace {
             out.pop_back();
         }
         return out;
-    }
-
-    bool containsSubsequence(
-            const std::vector<uint32_t>& haystack,
-            const std::vector<uint32_t>& needle) {
-        if (needle.empty() || needle.size() > haystack.size()) return false;
-        return std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end()) != haystack.end();
     }
 
     cv::Mat getRgbScreenCrop(const ScreenImage& screenImage, const cv::Rect& detectionArea) {
@@ -107,7 +93,8 @@ TextMatchingResult* TextMatcher::matchText(
         return &currentMatchingResult;
     }
 
-    const auto normalizedTarget = decodeAndNormalizeUtf8(conditionText, true);
+    const bool foldCyrillicHomoglyphs = (recognitionModelId == "CYRILLIC");
+    const auto normalizedTarget = decodeAndNormalizeUtf8(conditionText, true, foldCyrillicHomoglyphs);
     if (normalizedTarget.empty()) {
         return &currentMatchingResult;
     }
@@ -121,14 +108,14 @@ TextMatchingResult* TextMatcher::matchText(
 
     // Pass 1: Original unmodified RGB crop (zero regression for black text on white background)
     auto pass1Results = recognizeTextOnRgb(rgbScreenCrop, recognitionModelId);
-    evaluateTextMatches(pass1Results, normalizedTarget, minSimilarity, detectionArea, threshold);
+    evaluateTextMatches(pass1Results, normalizedTarget, minSimilarity, foldCyrillicHomoglyphs, detectionArea, threshold);
 
     // Pass 2: Fallback with background inversion + CLAHE only if Pass 1 did not match
     if (!currentMatchingResult.isDetected()) {
         cv::Mat enhancedRgb = preprocessColorText(rgbScreenCrop);
         if (!enhancedRgb.empty()) {
             auto pass2Results = recognizeTextOnRgb(enhancedRgb, recognitionModelId);
-            evaluateTextMatches(pass2Results, normalizedTarget, minSimilarity, detectionArea, threshold);
+            evaluateTextMatches(pass2Results, normalizedTarget, minSimilarity, foldCyrillicHomoglyphs, detectionArea, threshold);
         }
     }
 
@@ -421,11 +408,12 @@ void TextMatcher::evaluateTextMatches(
         const std::vector<TextRecognizerResult>& recognizerResults,
         const std::vector<uint32_t>& normalizedTarget,
         float minSimilarity,
+        bool foldCyrillicHomoglyphs,
         const cv::Rect& detectionArea,
         int threshold)
 {
     for (const auto& recognizerResult : recognizerResults) {
-        auto normalizedRecognized = decodeAndNormalizeUtf8(recognizerResult.text, true);
+        auto normalizedRecognized = decodeAndNormalizeUtf8(recognizerResult.text, true, foldCyrillicHomoglyphs);
         float score = bestSubstringSimilarity(normalizedRecognized, normalizedTarget, minSimilarity) * 100.f;
         LOGD("TextMatcher", "Score=%f; recognized=%s", score, recognizerResult.text.c_str());
 
@@ -442,7 +430,7 @@ void TextMatcher::evaluateTextMatches(
     if (!currentMatchingResult.isDetected() && recognizerResults.size() >= 2) {
         TextReadResult joined = joinRecognitionResults(recognizerResults);
         if (!joined.text.empty()) {
-            auto normalizedJoined = decodeAndNormalizeUtf8(joined.text, true);
+            auto normalizedJoined = decodeAndNormalizeUtf8(joined.text, true, foldCyrillicHomoglyphs);
             float score = bestSubstringSimilarity(normalizedJoined, normalizedTarget, minSimilarity) * 100.f;
             LOGD("TextMatcher", "Joined Score=%f; joined=%s", score, joined.text.c_str());
 
@@ -489,39 +477,13 @@ float TextMatcher::bestSubstringSimilarity(
         const std::vector<uint32_t>& target,
         float minSimilarity)
 {
-    if (recognized.empty() || target.empty()) return 0.f;
-
-    // Fast exact normalized subsequence match
-    if (containsSubsequence(recognized, target)) return 1.f;
-
-    const int targetLen = static_cast<int>(target.size());
-    const int recognizedLen = static_cast<int>(recognized.size());
-
-    // Fast path
-    if (recognizedLen <= targetLen + 2) return similarity(recognized, target, minSimilarity);
-
-    // Allow small OCR insertions/deletions
-    float bestScore = 0.f;
-    const int minWindow = std::max(1, targetLen - 2);
-    const int maxWindow = std::min(recognizedLen, targetLen + 4);
-
-    std::vector<uint32_t> window;
-    window.reserve(static_cast<size_t>(maxWindow));
-    for (int windowSize = minWindow; windowSize <= maxWindow; ++windowSize) {
-        for (int start = 0; start <= recognizedLen - windowSize; ++start) {
-            window.assign(recognized.begin() + start, recognized.begin() + start + windowSize);
-
-            float score = similarity(window, target, minSimilarity);
-            if (score > bestScore) {
-                bestScore = score;
-
-                // Early success exit
-                if (bestScore >= 0.95f) return bestScore;
-            }
-        }
-    }
-
-    return bestScore;
+    return TextMatchingCore::bestSubstringSimilarity(
+            recognized,
+            target,
+            minSimilarity,
+            comparisonPrevPrevRow,
+            comparisonPrevRow,
+            comparisonCurrRow);
 }
 
 float TextMatcher::similarity(
@@ -529,150 +491,32 @@ float TextMatcher::similarity(
         const std::vector<uint32_t>& target,
         float minSimilarity)
 {
-    if (recognized.empty() || target.empty()) return 0.f;
-
-    const int n = static_cast<int>(recognized.size());
-    const int m = static_cast<int>(target.size());
-    const int maxLen = std::max(n, m);
-
-    // Early impossible length check (epsilon avoids float truncation like 0.99999994 -> 0)
-    int maxAllowedDistance = static_cast<int>(std::floor((1.f - minSimilarity) * static_cast<float>(maxLen) + 1e-5f));
-    if (std::abs(n - m) > maxAllowedDistance) return 0.f;
-
-    comparisonPrevPrevRow.resize(static_cast<size_t>(m + 1));
-    comparisonPrevRow.resize(static_cast<size_t>(m + 1));
-    comparisonCurrRow.resize(static_cast<size_t>(m + 1));
-
-    for (int j = 0; j <= m; ++j) comparisonPrevRow[j] = j;
-
-    for (int i = 1; i <= n; ++i) {
-        comparisonCurrRow[0] = i;
-        int rowMin = comparisonCurrRow[0];
-
-        const uint32_t ca = recognized[i - 1];
-        for (int j = 1; j <= m; ++j) {
-            const uint32_t cb = target[j - 1];
-
-            int cost = (ca == cb) ? 0 : 1;
-
-            int deletion = comparisonPrevRow[j] + 1;
-            int insertion = comparisonCurrRow[j - 1] + 1;
-            int substitution = comparisonPrevRow[j - 1] + cost;
-            int value = std::min({ deletion, insertion, substitution });
-
-            // Damerau transposition
-            if (i > 1 && j > 1 && ca == target[j - 2] && recognized[i - 2] == cb) {
-                value = std::min(value, comparisonPrevPrevRow[j - 2] + 1);
-            }
-
-            comparisonCurrRow[j] = value;
-            rowMin = std::min(rowMin, value);
-        }
-
-        // Early exit
-        if (rowMin > maxAllowedDistance) return 0.f;
-
-        std::swap(comparisonPrevPrevRow, comparisonPrevRow);
-        std::swap(comparisonPrevRow, comparisonCurrRow);
-    }
-
-    int distance = comparisonPrevRow[m];
-    if (distance > maxAllowedDistance) return 0.f;
-
-    float score = 1.f - static_cast<float>(distance) / static_cast<float>(maxLen);
-    return (score + 1e-5f >= minSimilarity) ? std::max(0.f, score) : 0.f;
+    return TextMatchingCore::similarity(
+            recognized,
+            target,
+            minSimilarity,
+            comparisonPrevPrevRow,
+            comparisonPrevRow,
+            comparisonCurrRow);
 }
 
-uint32_t TextMatcher::normalizeCodepoint(uint32_t cp) {
-    // ASCII A-Z -> a-z
-    if (cp >= 0x0041 && cp <= 0x005A) return cp + 0x20;
-    // Cyrillic А-Я -> а-я
-    if (cp >= 0x0410 && cp <= 0x042F) return cp + 0x20;
-    // Cyrillic Ё / ё -> е
-    if (cp == 0x0401 || cp == 0x0451) return 0x0435;
-    return cp;
+uint32_t TextMatcher::normalizeCodepoint(uint32_t cp, bool foldCyrillicHomoglyphs) {
+    return TextMatchingCore::normalizeCodepoint(cp, foldCyrillicHomoglyphs);
 }
 
-std::vector<uint32_t> TextMatcher::decodeAndNormalizeUtf8(const std::string& text, bool stripTrailingPunctuation) {
-    std::vector<uint32_t> out;
-    out.reserve(text.size());
-
-    const auto* data = reinterpret_cast<const unsigned char*>(text.data());
-    const size_t len = text.size();
-    size_t i = 0;
-    bool prevWasSpace = true;
-
-    while (i < len) {
-        uint32_t cp = 0;
-        unsigned char c = data[i];
-        if (c < 0x80) {
-            cp = c;
-            i += 1;
-        } else if ((c & 0xE0) == 0xC0 && i + 1 < len && (data[i + 1] & 0xC0) == 0x80) {
-            cp = ((c & 0x1F) << 6) | (data[i + 1] & 0x3F);
-            i += 2;
-        } else if ((c & 0xF0) == 0xE0 && i + 2 < len &&
-                   (data[i + 1] & 0xC0) == 0x80 && (data[i + 2] & 0xC0) == 0x80) {
-            cp = ((c & 0x0F) << 12) | ((data[i + 1] & 0x3F) << 6) | (data[i + 2] & 0x3F);
-            i += 3;
-        } else if ((c & 0xF8) == 0xF0 && i + 3 < len &&
-                   (data[i + 1] & 0xC0) == 0x80 && (data[i + 2] & 0xC0) == 0x80 &&
-                   (data[i + 3] & 0xC0) == 0x80) {
-            cp = ((c & 0x07) << 18) | ((data[i + 1] & 0x3F) << 12) |
-                 ((data[i + 2] & 0x3F) << 6) | (data[i + 3] & 0x3F);
-            i += 4;
-        } else {
-            // Skip invalid UTF-8 byte safely
-            i += 1;
-            continue;
-        }
-
-        if (isWhitespaceCodepoint(cp)) {
-            if (!prevWasSpace) {
-                out.push_back(' ');
-                prevWasSpace = true;
-            }
-        } else {
-            out.push_back(normalizeCodepoint(cp));
-            prevWasSpace = false;
-        }
-    }
-
-    while (!out.empty() && out.back() == ' ') {
-        out.pop_back();
-    }
-
-    if (stripTrailingPunctuation) {
-        while (!out.empty() && (isTrailingPunctuation(out.back()) || out.back() == ' ')) {
-            out.pop_back();
-        }
-    }
-
-    return out;
+std::vector<uint32_t> TextMatcher::decodeAndNormalizeUtf8(
+        const std::string& text,
+        bool stripTrailingPunctuation,
+        bool foldCyrillicHomoglyphs) {
+    return TextMatchingCore::decodeAndNormalizeUtf8(text, stripTrailingPunctuation, foldCyrillicHomoglyphs);
 }
 
 float TextMatcher::getAdaptiveMinSimilarity(size_t targetCodepoints) {
-    return (targetCodepoints <= SHORT_TARGET_MAX_CODEPOINTS)
-           ? SHORT_TARGET_MIN_SIMILARITY
-           : DEFAULT_MIN_SIMILARITY;
+    return TextMatchingCore::getAdaptiveMinSimilarity(targetCodepoints);
 }
 
 bool TextMatcher::isNumber(const std::string& text) {
-    if (text.empty()) return false;
-
-    bool hasDigit = false;
-    for (char c : text) {
-        if (std::isdigit(static_cast<unsigned char>(c))) {
-            hasDigit = true;
-            continue;
-        }
-
-        if (c == '.' || c == ',' || c == ' ' || c == '-' || c == '+') continue;
-
-        return false;
-    }
-
-    return hasDigit;
+    return TextMatchingCore::isNumber(text);
 }
 
 double TextMatcher::stringToDouble(const std::string& text, NumberFormat format) {

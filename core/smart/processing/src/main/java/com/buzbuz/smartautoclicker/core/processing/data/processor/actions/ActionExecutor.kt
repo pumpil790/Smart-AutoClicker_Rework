@@ -19,6 +19,7 @@ package com.buzbuz.smartautoclicker.core.processing.data.processor.actions
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent as AndroidIntent
 
+import com.buzbuz.smartautoclicker.code.smart.detectionmodels.text.domain.OCRAlphabet
 import com.buzbuz.smartautoclicker.core.common.actions.AndroidActionExecutor
 import com.buzbuz.smartautoclicker.core.common.actions.gesture.builder.AndroidGestureBuilder
 import com.buzbuz.smartautoclicker.core.common.actions.model.ResolvedFinger
@@ -389,7 +390,12 @@ internal class ActionExecutor(
                 processingState.setStringVariable(action.targetName, capturedText)
 
             CaptureText.TargetType.FILE_LIST ->
-                processingState.appendToWordlist(action.targetName, capturedText, action.deduplicate)
+                processingState.appendToWordlist(
+                    listName = action.targetName,
+                    value = capturedText,
+                    deduplicate = action.deduplicate,
+                    foldCyrillicHomoglyphs = action.alphabet == OCRAlphabet.CYRILLIC,
+                )
         }
     }
 }

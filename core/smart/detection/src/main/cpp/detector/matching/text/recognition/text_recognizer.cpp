@@ -15,9 +15,12 @@
  * along with this program.  See <http://www.gnu.org/licenses/>.
  */
 #include "text_recognizer.hpp"
+#include "text_tiling_utils.hpp"
 #include "../../../../logs/log.h"
 
 #include <opencv2/imgproc.hpp>
+#include <algorithm>
+#include <cmath>
 #include <fstream>
 
 using namespace smartautoclicker;
@@ -39,10 +42,39 @@ bool TextRecognizer::init(const std::map<std::string, std::string>& models) {
     }
 
     // Pre-allocate padded buffer to the maximum possible width to avoid runtime reallocations
-    paddedBuffer = cv::Mat::zeros(48, 320, CV_8UC3);
-    resizedBuffer = cv::Mat::zeros(48, 320, CV_8UC3);
+    paddedBuffer = cv::Mat::zeros(TextTilingUtils::TARGET_HEIGHT, TextTilingUtils::MAX_WIDTH, CV_8UC3);
+    resizedBuffer = cv::Mat::zeros(TextTilingUtils::TARGET_HEIGHT, TextTilingUtils::MAX_WIDTH, CV_8UC3);
 
     isInitialized = true;
+    return true;
+}
+
+std::string TextRecognizer::mergeWindowTexts(const std::vector<std::string>& windowTexts) {
+    return TextTilingUtils::mergeWindowTexts(windowTexts);
+}
+
+bool TextRecognizer::runSingleInference(
+        AlphabetRecognizer& recognizer,
+        const ncnn::Mat& input,
+        const cv::Rect& boundingBox,
+        TextRecognizerResult& outResult)
+{
+    ncnn::Extractor extractor = recognizer.create_extractor();
+    extractor.set_light_mode(true);
+
+    ncnn::Mat output;
+    extractor.input("in0", input);
+    int result = extractor.extract("out0", output);
+    if (result != 0) {
+        LOGE("TextRecognizer", "Inference failed");
+        return false;
+    }
+
+    outResult = decode(
+            recognizer.getDictionary(),
+            boundingBox,
+            recognizer.isRtlAlphabet(),
+            output);
     return true;
 }
 
@@ -59,41 +91,75 @@ std::vector<TextRecognizerResult> TextRecognizer::recognizeText(
         return {};
     }
     auto& recognizer = it->second;
+    const bool isRtl = recognizer.isRtlAlphabet();
 
     for (const auto& detectionResult : detectionResults) {
         cv::Mat crop = detectionResult.crop;
-        if (crop.empty()) continue;
+        if (crop.empty() || crop.rows <= 0 || crop.cols <= 0) continue;
 
-        // 1. Preprocess using member buffers
-        // This is safe because we process one crop at a time (Sequential)
-        ncnn::Mat input = preprocess(crop, recognizer.isRtlAlphabet());
+        const float scale = static_cast<float>(TextTilingUtils::TARGET_HEIGHT) / static_cast<float>(crop.rows);
+        const int scaledWidth = std::max(1, static_cast<int>(std::round(static_cast<float>(crop.cols) * scale)));
 
-        // 2. Inference
-        ncnn::Extractor extractor = recognizer.create_extractor();
-        extractor.set_light_mode(true);
-
-        ncnn::Mat output;
-        extractor.input("in0", input);
-        int result = extractor.extract("out0", output);
-        if (result != 0) {
-            LOGE("TextRecognizer","Inference failed");
+        // Fast path: crops fitting within 320px or RTL alphabets keep exact single-pass recognition
+        if (scaledWidth <= TextTilingUtils::MAX_WIDTH || isRtl) {
+            ncnn::Mat input = preprocess(crop, isRtl);
+            TextRecognizerResult singleResult;
+            if (runSingleInference(recognizer, input, detectionResult.boundingBox, singleResult)) {
+                results.push_back(std::move(singleResult));
+            }
             continue;
         }
 
-        // 3. Decode
-        results.push_back(decode(
-                recognizer.getDictionary(),
-                detectionResult.boundingBox,
-                recognizer.isRtlAlphabet(),
-                output));
+        // Tiled path for long LTR lines (> 320px): resize proportionally without horizontal squishing
+        cv::Mat fullResized;
+        cv::resize(
+                crop,
+                fullResized,
+                cv::Size(scaledWidth, TextTilingUtils::TARGET_HEIGHT),
+                0, 0,
+                cv::INTER_LINEAR);
+
+        const std::vector<int> windowStarts = TextTilingUtils::computeWindowStarts(scaledWidth);
+        std::vector<std::string> windowTexts;
+        windowTexts.reserve(windowStarts.size());
+        float confidenceSum = 0.f;
+        int validWindowCount = 0;
+
+        for (int startX : windowStarts) {
+            cv::Mat tile = fullResized(cv::Rect(
+                    startX,
+                    0,
+                    TextTilingUtils::MAX_WIDTH,
+                    TextTilingUtils::TARGET_HEIGHT));
+            ncnn::Mat input = preprocessFixedTile(tile);
+
+            TextRecognizerResult tileResult;
+            if (!runSingleInference(recognizer, input, detectionResult.boundingBox, tileResult)) {
+                continue;
+            }
+
+            if (!tileResult.text.empty()) {
+                windowTexts.push_back(std::move(tileResult.text));
+                confidenceSum += tileResult.confidence;
+                validWindowCount++;
+            }
+        }
+
+        if (validWindowCount > 0) {
+            std::string mergedText = mergeWindowTexts(windowTexts);
+            float avgConfidence = confidenceSum / static_cast<float>(validWindowCount);
+            LOGD("TextRecognizer", "Tiled (%d windows): \"%s\" (conf=%.3f)",
+                 validWindowCount, mergedText.c_str(), avgConfidence);
+            results.push_back({detectionResult.boundingBox, std::move(mergedText), avgConfidence});
+        }
     }
 
     return results;
 }
 
 ncnn::Mat TextRecognizer::preprocess(const cv::Mat& crop, bool isRtlAlphabet) {
-    constexpr int targetHeight = 48;
-    constexpr int maxWidth = 320;
+    constexpr int targetHeight = TextTilingUtils::TARGET_HEIGHT;
+    constexpr int maxWidth = TextTilingUtils::MAX_WIDTH;
 
     float scale = static_cast<float>(targetHeight) / static_cast<float>(crop.rows);
     int resizedWidth = std::max(1, static_cast<int>(static_cast<float>(crop.cols) * scale));
@@ -112,6 +178,23 @@ ncnn::Mat TextRecognizer::preprocess(const cv::Mat& crop, bool isRtlAlphabet) {
     resizedBuffer.copyTo(paddedBuffer(cv::Rect(xOffset, 0, resizedWidth, targetHeight)));
 
     // Always pass maxWidth — SVTR attention is frozen at 320px
+    ncnn::Mat input = ncnn::Mat::from_pixels(
+            paddedBuffer.data,
+            ncnn::Mat::PIXEL_RGB,
+            maxWidth,
+            targetHeight);
+
+    input.substract_mean_normalize(meanVals, normVals);
+    return input;
+}
+
+ncnn::Mat TextRecognizer::preprocessFixedTile(const cv::Mat& tile) {
+    constexpr int targetHeight = TextTilingUtils::TARGET_HEIGHT;
+    constexpr int maxWidth = TextTilingUtils::MAX_WIDTH;
+
+    // Copy into contiguous pre-allocated buffer (sub-ROI Mat from fullResized is non-contiguous)
+    tile.copyTo(paddedBuffer);
+
     ncnn::Mat input = ncnn::Mat::from_pixels(
             paddedBuffer.data,
             ncnn::Mat::PIXEL_RGB,
